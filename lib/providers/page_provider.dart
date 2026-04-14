@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../services/wp_api_service.dart';
 
 class ContentPage extends StatefulWidget {
   final String slug;
@@ -13,7 +13,7 @@ class ContentPage extends StatefulWidget {
 
 class _ContentPageState extends State<ContentPage> {
   Future<Map<String, dynamic>> fetchContent(String slug) async {
-    final response = await http.get(
+    final response = await WpApiService.get(
       Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/pages/?slug=$slug'),
     );
 

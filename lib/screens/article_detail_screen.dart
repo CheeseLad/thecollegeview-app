@@ -6,8 +6,8 @@ import '../providers/saved_articles_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../services/wp_api_service.dart';
 import '../utils/html_utils.dart';
 import '../widgets/network_image_with_fallback.dart';
 import 'tag_articles_screen.dart';
@@ -294,7 +294,7 @@ class ArticleDetailScreen extends StatelessWidget {
   }
 
   Future<String> fetchAuthorName(int authorId) async {
-    final response = await http.get(
+    final response = await WpApiService.get(
         Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/users/$authorId'));
 
     if (response.statusCode == 200) {
@@ -307,7 +307,7 @@ class ArticleDetailScreen extends StatelessWidget {
 
   Future<String> fetchFeaturedMedia(int mediaId) async {
     try {
-      final response = await http.get(
+      final response = await WpApiService.get(
           Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/media/$mediaId'));
 
       if (response.statusCode == 200) {
@@ -328,7 +328,7 @@ class ArticleDetailScreen extends StatelessWidget {
       final List<String> tagNames = [];
       
       for (int tagId in tagIds) {
-        final response = await http.get(
+        final response = await WpApiService.get(
             Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/tags/$tagId'));
         
         if (response.statusCode == 200) {

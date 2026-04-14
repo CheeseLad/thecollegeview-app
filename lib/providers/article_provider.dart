@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../models/article.dart';
 import '../models/category.dart';
 import '../models/tag.dart';
+import '../services/wp_api_service.dart';
 
 class ArticleProvider with ChangeNotifier {
   List<Article> _articles = [];
@@ -36,7 +36,7 @@ class ArticleProvider with ChangeNotifier {
     const url =
         'https://thecollegeview.ie/wp-json/wp/v2/categories?include=4,7,5,687,6,220,68,9890,6880';
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await WpApiService.get(Uri.parse(url));
       if (response.statusCode == 200) {
         List<Category> loadedCategories = (json.decode(response.body) as List)
             .map((data) => Category.fromJson(data))
@@ -57,7 +57,7 @@ class ArticleProvider with ChangeNotifier {
     const url =
         'https://thecollegeview.ie/wp-json/wp/v2/posts?sticky=true&_fields=id,date,title,content,link,author,featured_media,tags';
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await WpApiService.get(Uri.parse(url));
       if (response.statusCode == 200) {
         List<Article> loadedArticles = (json.decode(response.body) as List)
             .map((data) => Article.fromJson(data))
@@ -84,7 +84,7 @@ class ArticleProvider with ChangeNotifier {
     final url =
         'https://thecollegeview.ie/wp-json/wp/v2/posts/?page=$_currentPage&per_page=10$categoryFilter$tagFilter&_fields=id,date,title,content,link,author,featured_media,tags';
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await WpApiService.get(Uri.parse(url));
       if (response.statusCode == 200) {
         List<Article> loadedArticles = (json.decode(response.body) as List)
             .map((data) => Article.fromJson(data))
@@ -107,7 +107,7 @@ class ArticleProvider with ChangeNotifier {
     final url =
         'https://thecollegeview.ie/wp-json/wp/v2/posts?search=$searchQuery';
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await WpApiService.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         _articles = data.map((json) => Article.fromJson(json)).toList();
@@ -148,7 +148,7 @@ class ArticleProvider with ChangeNotifier {
   Future<void> fetchTags() async {
     const url = 'https://thecollegeview.ie/wp-json/wp/v2/tags?per_page=100';
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await WpApiService.get(Uri.parse(url));
       if (response.statusCode == 200) {
         List<Tag> loadedTags = (json.decode(response.body) as List)
             .map((data) => Tag.fromJson(data))
@@ -188,7 +188,7 @@ class ArticleProvider with ChangeNotifier {
 
   Future<Article?> fetchArticleById(int articleId) async {
     try {
-      final response = await http.get(
+      final response = await WpApiService.get(
         Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/posts/$articleId?_fields=id,date,title,content,link,author,featured_media,tags'),
       );
       if (response.statusCode == 200) {

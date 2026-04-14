@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../providers/article_provider.dart';
 import '../providers/saved_articles_provider.dart';
 import '../models/article.dart';
 import '../screens/article_detail_screen.dart';
+import '../services/wp_api_service.dart';
 import '../utils/html_utils.dart';
 import 'network_image_with_fallback.dart';
 
@@ -147,7 +147,7 @@ class ArticleList extends StatelessWidget {
 
 
   Future<String> fetchAuthorName(int authorId) async {
-    final response = await http.get(
+    final response = await WpApiService.get(
         Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/users/$authorId'));
 
     if (response.statusCode == 200) {
@@ -160,7 +160,7 @@ class ArticleList extends StatelessWidget {
 
   Future<String> fetchFeaturedMedia(int mediaId) async {
     try {
-      final response = await http.get(
+      final response = await WpApiService.get(
           Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/media/$mediaId'));
 
       if (response.statusCode == 200) {

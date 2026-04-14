@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../models/page_content.dart';
+import '../services/wp_api_service.dart';
 
 class PageContentProvider with ChangeNotifier {
   PageContent? _aboutContent;
@@ -21,7 +21,7 @@ class PageContentProvider with ChangeNotifier {
 
     try {
       // Try to fetch from WordPress pages endpoint first
-      final response = await http.get(
+      final response = await WpApiService.get(
         Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/pages?slug=about'),
       );
 
@@ -54,7 +54,7 @@ class PageContentProvider with ChangeNotifier {
 
     try {
       // Try to fetch from WordPress pages endpoint first
-      final response = await http.get(
+      final response = await WpApiService.get(
         Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/pages?slug=contact'),
       );
 
