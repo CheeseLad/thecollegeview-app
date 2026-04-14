@@ -96,7 +96,7 @@ class _ArticleSubmissionPageState extends State<ArticleSubmissionPage> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               DropdownButtonFormField<String>(
-                value: null,
+                initialValue: null,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Select a category',

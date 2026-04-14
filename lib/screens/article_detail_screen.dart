@@ -260,7 +260,7 @@ class ArticleDetailScreen extends StatelessWidget {
                   },
                 ),
               ] else ...[
-                Text('Debug: Article has no tags'), // Debug
+                const Text('Debug: Article has no tags'), // Debug
               ],
               GestureDetector(
                 onTap: () {

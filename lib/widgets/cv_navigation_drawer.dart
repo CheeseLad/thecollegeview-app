@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../screens/submit_article.dart';
 import '../screens/articles_screen.dart';
 import '../screens/saved_articles_screen.dart';
 import '../screens/about_screen.dart';
@@ -103,13 +102,13 @@ class CVNavigationDrawer extends StatelessWidget {
             },
           ),
           const SizedBox(height: 10),
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SocialMediaIcon(
                   icon: FontAwesomeIcons.instagram,
                   url: 'https://instagram.com/thecollegeview'),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               SocialMediaIcon(
                   icon: FontAwesomeIcons.link,
                   url: 'https://thecollegeview.ie'),

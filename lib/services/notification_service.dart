@@ -1,3 +1,4 @@
+/*
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -18,7 +19,7 @@ class NotificationService {
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
-  
+
   StreamSubscription<RemoteMessage>? _messageSubscription;
   GlobalKey<NavigatorState>? _navigatorKey;
   ArticleProvider? _articleProvider;
@@ -47,7 +48,7 @@ class NotificationService {
     // Initialize local notifications for Android
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    
+
     const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -95,7 +96,7 @@ class NotificationService {
     // Get FCM token
     String? token = await _firebaseMessaging.getToken();
     print('FCM Token: $token');
-    
+
     // Subscribe to topic for all users to receive article notifications
     // Note: Topic subscription is not supported on web, so we skip it for web platforms
     if (!kIsWeb) {
@@ -120,7 +121,7 @@ class NotificationService {
     print('Received foreground message: ${message.messageId}');
     print('Message data: ${message.data}');
     print('Notification: ${message.notification?.title} - ${message.notification?.body}');
-    
+
     final notification = message.notification;
 
     if (notification != null) {
@@ -154,7 +155,7 @@ class NotificationService {
   // Handle notification tap
   Future<void> _handleNotificationTap(RemoteMessage message) async {
     print('Notification tapped: ${message.messageId}');
-    
+
     final articleId = message.data['article_id'];
     if (articleId != null && _navigatorKey?.currentContext != null && _articleProvider != null) {
       await _navigateToArticle(int.parse(articleId.toString()));
@@ -164,7 +165,7 @@ class NotificationService {
   // Handle local notification tap
   void _onNotificationTapped(NotificationResponse response) {
     print('Local notification tapped: ${response.payload}');
-    
+
     if (response.payload != null && _navigatorKey?.currentContext != null && _articleProvider != null) {
       final articleId = int.tryParse(response.payload!);
       if (articleId != null) {
@@ -202,4 +203,5 @@ class NotificationService {
     return await _firebaseMessaging.getToken();
   }
 }
+*/
 

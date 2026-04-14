@@ -9,7 +9,7 @@ import 'providers/saved_articles_provider.dart';
 import 'providers/page_content_provider.dart';
 import 'screens/articles_screen.dart';
 import 'screens/article_detail_screen.dart';
-import 'services/notification_service.dart';
+// import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,10 +52,10 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _articleProvider = ArticleProvider();
-    // Initialize notification service after first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      NotificationService().initialize(_navigatorKey, _articleProvider);
-    });
+    // Push notifications are temporarily disabled.
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   NotificationService().initialize(_navigatorKey, _articleProvider);
+    // });
   }
 
   @override

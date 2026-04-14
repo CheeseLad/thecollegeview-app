@@ -59,6 +59,7 @@ class SavedArticlesProvider extends ChangeNotifier {
     _loadSavedArticles();
   }
 
+  @override
   void dispose() {
     _box.close();
     super.dispose();
