@@ -7,6 +7,10 @@ Developing an iOS & Android app for The College View - DCU's independent student
 - WordPress REST API
 - Dart
 
+## Running on Web
+
+Chrome/web builds use the local WordPress proxy in `tool/wp_proxy.dart` for authenticated API requests. Start it with `dart run tool/wp_proxy.dart`, then launch the app with `flutter run -d chrome`.
+
 ## Preview: [tcvapp.jakefarrell.ie](https://tcvapp.jakefarrell.ie/)
 
 ![](https://www.jakefarrell.ie/tcvapp.webp)

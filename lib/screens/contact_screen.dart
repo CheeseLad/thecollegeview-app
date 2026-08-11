@@ -160,7 +160,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 const SizedBox(height: 30),
                 
                 const Text(
-                  '© The College View 1999-2025 - Maintained by Jake Farrell',
+                  '© The College View 1999-2026 - Maintained by Jake Farrell',
                   style: TextStyle(
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
