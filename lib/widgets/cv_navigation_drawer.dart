@@ -134,8 +134,9 @@ class CVNavigationDrawer extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) =>
-                    ArticlesScreen(categoryName: category.name)),
+              builder: (context) =>
+                  ArticlesScreen(categoryName: category.name),
+            ),
           );
         },
       );
@@ -145,8 +146,24 @@ class CVNavigationDrawer extends StatelessWidget {
       title: Text(category.name),
       tilePadding: const EdgeInsets.only(left: 16, right: 16),
       childrenPadding: const EdgeInsets.only(left: 16),
-      onExpansionChanged: (_) {},
       children: [
+        ListTile(
+          contentPadding: const EdgeInsets.only(left: 16, right: 16),
+          title: Text('All ${category.name}'),
+          onTap: () {
+            articleProvider.selectCategory(category.id);
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ArticlesScreen(
+                  categoryName: 'All ${category.name}',
+                ),
+              ),
+            );
+          },
+        ),
+
         ...category.subcategories.map((subCategory) {
           return Padding(
             padding: const EdgeInsets.only(left: 16),
