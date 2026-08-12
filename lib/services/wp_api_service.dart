@@ -9,6 +9,7 @@ class WpApiService {
   static const String _usernameKey = 'WP_API_USERNAME';
   static const String _passwordKey = 'WP_API_PASSWORD';
   static const String _proxyBaseUrlKey = 'WP_API_PROXY_BASE_URL';
+  static const String _authorInfoEndpoint = 'http://localhost:5000/get-subheading';
 
   static Future<http.Response> get(Uri uri, {Map<String, String>? headers}) {
     if (kIsWeb && uri.host == _host && uri.path.startsWith('/wp-json/')) {
@@ -20,6 +21,39 @@ class WpApiService {
 
     final mergedHeaders = <String, String>{...?headers, ..._authHeadersFor(uri)};
     return http.get(uri, headers: mergedHeaders.isEmpty ? null : mergedHeaders);
+  }
+
+  static Future<String> fetchAuthorInfo(String articleUrl, int authorId) async {
+    try {
+      final response = await http.get(
+        Uri.parse(_authorInfoEndpoint).replace(
+          queryParameters: {'url': articleUrl},
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final body = response.body.trim();
+        if (body.isNotEmpty) {
+          try {
+            final decoded = jsonDecode(body);
+            if (decoded is Map<String, dynamic>) {
+              final subheading = decoded['subheading'];
+              if (subheading is String && subheading.trim().isNotEmpty) {
+                return subheading.trim();
+              }
+            }
+          } catch (_) {
+            return body;
+          }
+
+          return body;
+        }
+      }
+    } catch (_) {
+      // Keep the display tied to the local author-info endpoint.
+    }
+
+    throw Exception('Failed to load author subheading');
   }
 
   static Uri? _buildProxyUri(Uri originalUri) {

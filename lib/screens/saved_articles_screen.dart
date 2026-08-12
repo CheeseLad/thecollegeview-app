@@ -138,7 +138,7 @@ class SavedArticlesScreen extends StatelessWidget {
                                     Text(savedDate),
                                     const SizedBox(height: 5),
                                     FutureBuilder<String>(
-                                      future: fetchAuthorName(savedArticle.author),
+                                      future: fetchAuthorName(savedArticle.link, savedArticle.author),
                                       builder: (context, snapshot) {
                                         if (snapshot.connectionState ==
                                             ConnectionState.waiting) {
@@ -176,16 +176,9 @@ class SavedArticlesScreen extends StatelessWidget {
     );
   }
 
-  Future<String> fetchAuthorName(int authorId) async {
-    final response = await WpApiService.get(
-        Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/users/$authorId'));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return HtmlUtils.decodeHtmlEntities(data['name']);
-    } else {
-      throw Exception('Failed to load author');
-    }
+  Future<String> fetchAuthorName(String articleUrl, int authorId) async {
+    final authorName = await WpApiService.fetchAuthorInfo(articleUrl, authorId);
+    return HtmlUtils.decodeHtmlEntities(authorName);
   }
 
   Future<String> fetchFeaturedMedia(int mediaId) async {
