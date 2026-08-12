@@ -126,6 +126,7 @@ class CVNavigationDrawer extends StatelessWidget {
 
     if (category.subcategories.isEmpty) {
       return ListTile(
+        contentPadding: const EdgeInsets.only(left: 16, right: 16),
         title: Text(category.name),
         onTap: () {
           articleProvider.selectCategory(category.id);
@@ -138,13 +139,21 @@ class CVNavigationDrawer extends StatelessWidget {
           );
         },
       );
-    } else {
-      return ExpansionTile(
-        title: Text(category.name),
-        children: category.subcategories.map((subCategory) {
-          return _buildCategoryTile(context, subCategory);
-        }).toList(),
-      );
     }
+
+    return ExpansionTile(
+      title: Text(category.name),
+      tilePadding: const EdgeInsets.only(left: 16, right: 16),
+      childrenPadding: const EdgeInsets.only(left: 16),
+      onExpansionChanged: (_) {},
+      children: [
+        ...category.subcategories.map((subCategory) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: _buildCategoryTile(context, subCategory),
+          );
+        }),
+      ],
+    );
   }
 }

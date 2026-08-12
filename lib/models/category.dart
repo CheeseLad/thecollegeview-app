@@ -29,13 +29,13 @@ class Category {
       for (var category in categories) category.id: category
     };
 
-    for (var category in categories) {
-      if (category.parent != null &&
-          categoryMap.containsKey(category.parent!)) {
-        categoryMap[category.parent!]!.subcategories.add(category);
+    for (final category in categories) {
+      final parentId = category.parent;
+      if (parentId != null && parentId != 0 && categoryMap.containsKey(parentId)) {
+        categoryMap[parentId]!.subcategories.add(category);
       }
     }
 
-    return categories.where((category) => category.parent == null).toList();
+    return categories.where((category) => category.parent == null || category.parent == 0).toList();
   }
 }

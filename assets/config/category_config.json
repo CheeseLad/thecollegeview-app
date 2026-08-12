@@ -1,0 +1,49 @@
+{
+  "includeIds": [4, 
+                 7,
+                 5, 
+                 10473, 
+                 687, 
+                 220, 
+                 9890, 
+                 68, 
+                 10341],
+  "dropdowns": [
+    {
+      "parentId": 4,
+      "subcategories": [140, 161, 139]
+    },
+    {
+      "parentId": 7,
+      "subcategories": [149, 150, 151, 152, 153]
+    },
+    {
+      "parentId": 5,
+      "subcategories": [145, 146, 148]
+    },
+    {
+      "parentId": 10473,
+      "subcategories": []
+    },
+    {
+      "parentId": 687,
+      "subcategories": []
+    },
+    {
+      "parentId": 220,
+      "subcategories": []
+    },
+    {
+      "parentId": 9890,
+      "subcategories": []
+    },
+    {
+      "parentId": 68,
+      "subcategories": []
+    },
+    {
+      "parentId": 10341,
+      "subcategories": []
+    }
+  ]
+}
