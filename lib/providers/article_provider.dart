@@ -36,71 +36,59 @@ class ArticleProvider with ChangeNotifier {
   Future<void> fetchCategories() async {
     try {
       final config = await CategoryConfig.load();
-      final includeIds = config.includeIds;
-      final idsParam = includeIds.isEmpty ? '' : '?include=${includeIds.join(',')}';
-      final url = 'https://thecollegeview.ie/wp-json/wp/v2/categories$idsParam';
+
+      final url =
+          'https://thecollegeview.ie/wp-json/wp/v2/categories'
+          '?per_page=100'
+          '&_fields=id,name,slug,parent,count';
+
       final response = await WpApiService.get(Uri.parse(url));
 
-      if (response.statusCode == 200) {
-        final allCategories = (json.decode(response.body) as List)
-            .map((data) => Category.fromJson(data))
-            .toList();
-        final categoriesById = {
-          for (final category in allCategories) category.id: category,
-        };
+      if (response.statusCode != 200) {
+        _error = 'Failed to load categories';
+        notifyListeners();
+        return;
+      }
 
-        final rootCategories = <Category>[];
-        final dropdownParentIds = config.dropdowns.map((item) => item.parentId).toSet();
-        final childCategoryIds = config.dropdowns
-            .expand((item) => item.subcategories)
-            .toSet();
+      final allCategories = (json.decode(response.body) as List)
+          .map((data) => Category.fromJson(data))
+          .toList();
 
-        final orderedIds = config.includeIds;
-        final orderedById = <int, Category>{};
+      final categoriesById = {
+        for (final category in allCategories)
+          category.id: category,
+      };
 
-        for (final category in allCategories) {
-          if (!orderedIds.contains(category.id)) {
+      final rootCategories = <Category>[];
+
+      for (final categoryId in config.includeIds) {
+        final category = categoriesById[categoryId];
+
+        if (category == null) {
+          continue;
+        }
+
+        category.subcategories.clear();
+
+        for (final dropdown in config.dropdowns) {
+          if (dropdown.parentId != category.id) {
             continue;
           }
 
-          final dropdown = config.dropdowns.firstWhere(
-            (item) => item.parentId == category.id,
-            orElse: () => const CategoryDropdown(parentId: 0, subcategories: []),
-          );
-
-          category.subcategories.clear();
-
-          final orderedSubcategories = <Category>[];
           for (final subcategoryId in dropdown.subcategories) {
             final subcategory = categoriesById[subcategoryId];
+
             if (subcategory != null) {
-              orderedSubcategories.add(subcategory);
+              category.subcategories.add(subcategory);
             }
           }
-
-          category.subcategories.addAll(orderedSubcategories);
-
-          final isConfiguredParent = dropdownParentIds.contains(category.id);
-          final isConfiguredChild = childCategoryIds.contains(category.id);
-
-          if (isConfiguredParent || (!isConfiguredChild && !dropdownParentIds.contains(category.id))) {
-            orderedById[category.id] = category;
-          }
         }
 
-        for (final id in orderedIds) {
-          final category = orderedById[id];
-          if (category != null) {
-            rootCategories.add(category);
-          }
-        }
-
-        _categories = rootCategories;
-        notifyListeners();
-      } else {
-        _error = 'Failed to load categories';
-        notifyListeners();
+        rootCategories.add(category);
       }
+
+      _categories = rootCategories;
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
       notifyListeners();

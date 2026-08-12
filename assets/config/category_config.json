@@ -1,13 +1,5 @@
 {
-  "includeIds": [4, 
-                 7,
-                 5, 
-                 10473, 
-                 687, 
-                 220, 
-                 9890, 
-                 68, 
-                 10341],
+  "includeIds": [4, 7, 5, 10473, 687, 220, 9890, 6, 68, 10341],
   "dropdowns": [
     {
       "parentId": 4,
@@ -31,15 +23,19 @@
     },
     {
       "parentId": 220,
-      "subcategories": []
+      "subcategories": [8, 136]
     },
     {
       "parentId": 9890,
       "subcategories": []
     },
     {
+      "parentId": 6,
+      "subcategories": [142, 143, 160, 717]
+    },
+    {
       "parentId": 68,
-      "subcategories": []
+      "subcategories": [155, 154, 156]
     },
     {
       "parentId": 10341,
