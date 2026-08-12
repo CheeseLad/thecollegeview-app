@@ -66,109 +66,118 @@ class _ContactScreenState extends State<ContactScreen> {
             );
           }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Contact',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Please email press releases to the appropriate section only.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                _buildContactSection(
-                  'Editor-in-Chief: ${contactInfo.editorInChief}',
-                  contactInfo.editorInChiefEmail,
-                ),
-                _buildContactSection(
-                  'Deputy Chief Editor: ${contactInfo.deputyEditor}',
-                  contactInfo.deputyEditorEmail,
-                ),
-                _buildContactSection(
-                  'News: ${contactInfo.newsEditors}',
-                  contactInfo.newsEmail,
-                ),
-                _buildContactSection(
-                  'Opinions & Features: ${contactInfo.opinionFeaturesEditors}',
-                  '${contactInfo.opinionEmail}\n${contactInfo.featuresEmail}',
-                ),
-                _buildContactSection(
-                  'Sports: ${contactInfo.sportsEditors}',
-                  contactInfo.sportsEmail,
-                ),
-                _buildContactSection(
-                  'Lifestyle: ${contactInfo.lifestyleEditors}',
-                  contactInfo.lifestyleEmail,
-                ),
-                _buildContactSection(
-                  'The Hype: ${contactInfo.hypeEditors}',
-                  contactInfo.hypeEmail,
-                ),
-                _buildContactSection(
-                  'Satire & Cartoons: ${contactInfo.satireEditors}',
-                  contactInfo.satireEmail,
-                ),
-                _buildContactSection(
-                  'Irish & Lang: ${contactInfo.irishEditors}',
-                  contactInfo.irishEmail,
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        contactInfo.productionEmail,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 900),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Contact',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Please email press releases to the appropriate section only.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    _buildContactSection(
+                      'Editor-in-Chief: ${contactInfo.editorInChief}',
+                      contactInfo.editorInChiefEmail,
+                    ),
+                    _buildContactSection(
+                      'Deputy Chief Editor: ${contactInfo.deputyEditor}',
+                      contactInfo.deputyEditorEmail,
+                    ),
+                    _buildContactSection(
+                      'News: ${contactInfo.newsEditors}',
+                      contactInfo.newsEmail,
+                    ),
+                    _buildContactSection(
+                      'Opinions & Features: ${contactInfo.opinionFeaturesEditors}',
+                      '${contactInfo.opinionEmail}\n${contactInfo.featuresEmail}',
+                    ),
+                    _buildContactSection(
+                      'Sports: ${contactInfo.sportsEditors}',
+                      contactInfo.sportsEmail,
+                    ),
+                    _buildContactSection(
+                      'Lifestyle: ${contactInfo.lifestyleEditors}',
+                      contactInfo.lifestyleEmail,
+                    ),
+                    _buildContactSection(
+                      'The Hype: ${contactInfo.hypeEditors}',
+                      contactInfo.hypeEmail,
+                    ),
+                    _buildContactSection(
+                      'Satire & Cartoons: ${contactInfo.satireEditors}',
+                      contactInfo.satireEmail,
+                    ),
+                    _buildContactSection(
+                      'Irish & Lang: ${contactInfo.irishEditors}',
+                      contactInfo.irishEmail,
+                    ),
+                    _buildContactSection(
+                      'E-paper Layout Editors and Sub-editors', contactInfo.productionEmail
+                    ),
+                    /*const SizedBox(height: 20),
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              contactInfo.productionEmail,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            const Text(
+                              '(e-paper layout editors and sub-editors)',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 5),
-                      const Text(
-                        '(e-paper layout editors and sub-editors)',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontStyle: FontStyle.italic,
-                        ),
+                    ),
+                    const SizedBox(height: 20),*/
+                    _buildContactSection(
+                      'Webmaster: ${contactInfo.webmaster}',
+                      contactInfo.webmasterEmail,
+                    ),
+                    /*const SizedBox(height: 30),
+                    const Text(
+                      '© The College View 1999-2026 - Maintained by Jake Farrell',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
                       ),
-                    ],
-                  ),
+                    ),*/
+                    const SizedBox(height: 5),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                _buildContactSection(
-                  'Webmaster: ${contactInfo.webmaster}',
-                  contactInfo.webmasterEmail,
-                ),
-                const SizedBox(height: 30),
-                
-                const Text(
-                  '© The College View 1999-2026 - Maintained by Jake Farrell',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                
-              ],
+              ),
             ),
           );
         },
@@ -177,36 +186,39 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Widget _buildContactSection(String title, String email) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => _launchEmail(email),
-            child: Text(
-              email,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
               style: const TextStyle(
-                fontSize: 14,
-                color: Colors.blue,
-                decoration: TextDecoration.underline,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () => _launchEmail(email),
+              child: Text(
+                email,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.blue,
+                  // decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

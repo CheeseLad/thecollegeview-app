@@ -67,34 +67,47 @@ class _AboutScreenState extends State<AboutScreen> {
             );
           }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  aboutContent.title,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 900),
+              child: Card(
+                margin: const EdgeInsets.all(12),
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          aboutContent.title,
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        HtmlWidget(
+                          aboutContent.content,
+                          textStyle: const TextStyle(fontSize: 16, height: 1.5),
+                        ),
+                        const SizedBox(height: 30),
+                        const Text(
+                          '© The College View 1999-2026 - Maintained by Jake Farrell',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                HtmlWidget(
-                  aboutContent.content,
-                  textStyle: const TextStyle(fontSize: 16, height: 1.5),
-                ),
-                
-                const SizedBox(height: 30),
-                const Text(
-                  '© The College View 1999-2026 - Maintained by Jake Farrell',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 5),
-              ],
+              ),
             ),
           );
         },
