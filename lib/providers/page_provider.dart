@@ -14,7 +14,7 @@ class ContentPage extends StatefulWidget {
 class _ContentPageState extends State<ContentPage> {
   Future<Map<String, dynamic>> fetchContent(String slug) async {
     final response = await WpApiService.get(
-      Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/pages/?slug=$slug'),
+      Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/pages/?slug=$slug'),
     );
 
     if (response.statusCode == 200) {

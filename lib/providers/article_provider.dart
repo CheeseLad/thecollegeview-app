@@ -38,7 +38,7 @@ class ArticleProvider with ChangeNotifier {
       final config = await CategoryConfig.load();
 
       final url =
-          'https://thecollegeview.ie/wp-json/wp/v2/categories'
+          'https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/categories'
           '?per_page=100'
           '&_fields=id,name,slug,parent,count';
 
@@ -97,7 +97,7 @@ class ArticleProvider with ChangeNotifier {
 
   Future<void> fetchStickyArticles() async {
     const url =
-        'https://thecollegeview.ie/wp-json/wp/v2/posts?sticky=true&_fields=id,date,title,content,link,author,featured_media,tags';
+        'https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/posts?sticky=true&_fields=id,date,title,content,link,author,featured_media,tags';
     try {
       final response = await WpApiService.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -124,7 +124,7 @@ class ArticleProvider with ChangeNotifier {
         _selectedCategory != null ? '&categories=$_selectedCategory' : '';
     final tagFilter = _selectedTag != null ? '&tags=$_selectedTag' : '';
     final url =
-        'https://thecollegeview.ie/wp-json/wp/v2/posts/?page=$_currentPage&per_page=10$categoryFilter$tagFilter&_fields=id,date,title,content,link,author,featured_media,tags';
+        'https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/posts/?page=$_currentPage&per_page=10$categoryFilter$tagFilter&_fields=id,date,title,content,link,author,featured_media,tags';
     try {
       final response = await WpApiService.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -147,7 +147,7 @@ class ArticleProvider with ChangeNotifier {
 
   Future<void> searchArticles(String searchQuery) async {
     final url =
-        'https://thecollegeview.ie/wp-json/wp/v2/posts?search=$searchQuery';
+        'https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/posts?search=$searchQuery';
     try {
       final response = await WpApiService.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -188,7 +188,7 @@ class ArticleProvider with ChangeNotifier {
   }
 
   Future<void> fetchTags() async {
-    const url = 'https://thecollegeview.ie/wp-json/wp/v2/tags?per_page=100';
+    const url = 'https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/tags?per_page=100';
     try {
       final response = await WpApiService.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -231,7 +231,7 @@ class ArticleProvider with ChangeNotifier {
   Future<Article?> fetchArticleById(int articleId) async {
     try {
       final response = await WpApiService.get(
-        Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/posts/$articleId?_fields=id,date,title,content,link,author,featured_media,tags'),
+        Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/posts/$articleId?_fields=id,date,title,content,link,author,featured_media,tags'),
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

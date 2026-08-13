@@ -22,7 +22,7 @@ class PageContentProvider with ChangeNotifier {
     try {
       // Try to fetch from WordPress pages endpoint first
       final response = await WpApiService.get(
-        Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/pages?slug=about'),
+        Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/pages?slug=about'),
       );
 
       if (response.statusCode == 200) {
@@ -55,7 +55,7 @@ class PageContentProvider with ChangeNotifier {
     try {
       // Try to fetch from WordPress pages endpoint first
       final response = await WpApiService.get(
-        Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/pages?slug=contact'),
+        Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/pages?slug=contact'),
       );
 
       if (response.statusCode == 200) {
@@ -99,7 +99,7 @@ class PageContentProvider with ChangeNotifier {
         <p>The College View welcomes criticism and opposing viewpoints through constructive and rational debate and wishes to create an atmosphere which encourages an open dialogue.</p>
       ''',
       excerpt: 'About The College View - DCU\'s Independent Student Newspaper',
-      link: 'https://thecollegeview.ie/about/',
+      link: 'https://tcvappapi.jakefarrell.ie/about/',
       slug: 'about',
     );
   }

@@ -301,7 +301,7 @@ class ArticleDetailScreen extends StatelessWidget {
   Future<String> fetchFeaturedMedia(int mediaId) async {
     try {
       final response = await WpApiService.get(
-          Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/media/$mediaId'));
+          Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/media/$mediaId'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -322,7 +322,7 @@ class ArticleDetailScreen extends StatelessWidget {
       
       for (int tagId in tagIds) {
         final response = await WpApiService.get(
-            Uri.parse('https://thecollegeview.ie/wp-json/wp/v2/tags/$tagId'));
+            Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/tags/$tagId'));
         
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
