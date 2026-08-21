@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/page_content.dart';
 import '../services/wp_api_service.dart';
+import '../config/app_urls.dart';
 
 class PageContentProvider with ChangeNotifier {
   PageContent? _aboutContent;
@@ -22,7 +23,7 @@ class PageContentProvider with ChangeNotifier {
     try {
       // Try to fetch from WordPress pages endpoint first
       final response = await WpApiService.get(
-        Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/pages?slug=about'),
+         Uri.parse('${AppUrls.apiBase}/wp-json/wp/v2/pages?slug=about'),
       );
 
       if (response.statusCode == 200) {
@@ -55,7 +56,7 @@ class PageContentProvider with ChangeNotifier {
     try {
       // Try to fetch from WordPress pages endpoint first
       final response = await WpApiService.get(
-        Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/pages?slug=contact'),
+         Uri.parse('${AppUrls.apiBase}/wp-json/wp/v2/pages?slug=contact'),
       );
 
       if (response.statusCode == 200) {
@@ -99,7 +100,7 @@ class PageContentProvider with ChangeNotifier {
         <p>The College View welcomes criticism and opposing viewpoints through constructive and rational debate and wishes to create an atmosphere which encourages an open dialogue.</p>
       ''',
       excerpt: 'About The College View - DCU\'s Independent Student Newspaper',
-      link: 'https://tcvappapi.jakefarrell.ie/about/',
+      link: '${AppUrls.apiBase}/about/',
       slug: 'about',
     );
   }
@@ -107,25 +108,25 @@ class PageContentProvider with ChangeNotifier {
   ContactInfo _getStaticContactInfo() {
     return ContactInfo(
       editorInChief: 'Katie O\'Shaughnessy',
-      editorInChiefEmail: 'editor@thecollegeview.ie',
+      editorInChiefEmail: 'editor@${AppUrls.websiteDomain}',
       deputyEditor: 'Leonor Selas Amaral',
-      deputyEditorEmail: 'deputyeditor@thecollegeview.ie',
+      deputyEditorEmail: 'deputyeditor@${AppUrls.websiteDomain}',
       newsEditors: 'Annu Mandal & Adam Van Eekeren',
-      newsEmail: 'news@thecollegeview.ie',
+      newsEmail: 'news@${AppUrls.websiteDomain}',
       opinionFeaturesEditors: 'Ciara McGuinness, Erin Reel & Zoe Percival',
-      opinionEmail: 'opinion@thecollegeview.ie',
-      featuresEmail: 'features@thecollegeview.ie',
+      opinionEmail: 'opinion@${AppUrls.websiteDomain}',
+      featuresEmail: 'features@${AppUrls.websiteDomain}',
       sportsEditors: 'Torna Mulconry, Ross Flanagan & Tiarnan O\'Kelly',
-      sportsEmail: 'sports@thecollegeview.ie',
+      sportsEmail: 'sports@${AppUrls.websiteDomain}',
       lifestyleEditors: 'Ruby Hegarty & Leah Doherty',
-      lifestyleEmail: 'lifestyle@thecollegeview.ie',
+      lifestyleEmail: 'lifestyle@${AppUrls.websiteDomain}',
       hypeEditors: 'Dylan Hand & Erica Elliott',
-      hypeEmail: 'thehype@thecollegeview.ie',
+      hypeEmail: 'thehype@${AppUrls.websiteDomain}',
       satireEditors: 'Ailish Connor & Shane Meleady',
-      satireEmail: 'satire@thecollegeview.ie',
+      satireEmail: 'satire@${AppUrls.websiteDomain}',
       irishEditors: 'Harry Byrne & Aisling O\'Kane',
-      irishEmail: 'gaeilge@thecollegeview.ie',
-      productionEmail: 'production@thecollegeview.ie',
+      irishEmail: 'gaeilge@${AppUrls.websiteDomain}',
+      productionEmail: 'production@${AppUrls.websiteDomain}',
       webmaster: 'Jake Farrell',
       webmasterEmail: 'webmaster@dcumps.ie',
     );

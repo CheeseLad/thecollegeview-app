@@ -1,10 +1,11 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../config/app_urls.dart';
 
 class WpApiService {
   static const String _authorInfoEndpoint =
-      'https://tcvappapi.jakefarrell.ie/get-subheading';
+      '${AppUrls.apiBase}/get-subheading';
 
   static Future<http.Response> get(
     Uri uri, {

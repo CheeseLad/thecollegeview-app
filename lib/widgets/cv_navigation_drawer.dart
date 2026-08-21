@@ -7,6 +7,7 @@ import '../screens/about_screen.dart';
 import '../screens/contact_screen.dart';
 import '../providers/article_provider.dart';
 import '../models/category.dart';
+import '../config/app_urls.dart';
 import 'social_media_icon.dart';
 
 class CVNavigationDrawer extends StatelessWidget {
@@ -121,7 +122,7 @@ class CVNavigationDrawer extends StatelessWidget {
                 SizedBox(width: 10),
                 SocialMediaIcon(
                   icon: FontAwesomeIcons.globe,
-                  url: 'https://thecollegeview.ie',
+                   url: AppUrls.website,
                 ),
               ],
             ),

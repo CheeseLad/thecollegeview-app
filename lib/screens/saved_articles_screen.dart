@@ -8,6 +8,7 @@ import '../screens/article_detail_screen.dart';
 import '../services/wp_api_service.dart';
 import '../utils/html_utils.dart';
 import '../widgets/network_image_with_fallback.dart';
+import '../config/app_urls.dart';
 
 class SavedArticlesScreen extends StatelessWidget {
   const SavedArticlesScreen({super.key});
@@ -214,7 +215,7 @@ class _SavedArticleCardState extends State<_SavedArticleCard> {
   Future<String> fetchFeaturedMedia(int mediaId) async {
     try {
       final response = await WpApiService.get(
-          Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/media/$mediaId'));
+          Uri.parse('${AppUrls.apiBase}/wp-json/wp/v2/media/$mediaId'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
