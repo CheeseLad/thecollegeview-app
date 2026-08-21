@@ -54,124 +54,154 @@ class SavedArticlesScreen extends StatelessWidget {
                 ),
               )
             : ListView.builder(
-              itemCount: savedArticlesProvider.savedArticles.length,
-              itemBuilder: (context, index) {
-                SavedArticle savedArticle = savedArticlesProvider.savedArticles[index];
-                String formattedDate =
-                    '⏰ ${DateFormat('MMMM d, y').format(DateTime.parse(savedArticle.date))}';
-                String savedDate =
-                    '💾 Saved ${DateFormat('MMM d, y').format(savedArticle.savedAt)}';
+                itemCount: savedArticlesProvider.savedArticles.length,
+                itemBuilder: (context, index) {
+                  SavedArticle savedArticle =
+                      savedArticlesProvider.savedArticles[index];
+                  String formattedDate =
+                      '⏰ ${DateFormat('MMMM d, y').format(DateTime.parse(savedArticle.date))}';
+                  String savedDate =
+                      '💾 Saved ${DateFormat('MMM d, y').format(savedArticle.savedAt)}';
 
-                return Card(
-                  margin: const EdgeInsets.all(10),
-                  child: Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: Row(
+                  return _SavedArticleCard(
+                    savedArticle: savedArticle,
+                    formattedDate: formattedDate,
+                    savedDate: savedDate,
+                    onRemove: () =>
+                        savedArticlesProvider.removeArticle(savedArticle.id),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+}
+
+class _SavedArticleCard extends StatefulWidget {
+  final SavedArticle savedArticle;
+  final String formattedDate;
+  final String savedDate;
+  final VoidCallback onRemove;
+
+  const _SavedArticleCard({
+    required this.savedArticle,
+    required this.formattedDate,
+    required this.savedDate,
+    required this.onRemove,
+  });
+
+  @override
+  State<_SavedArticleCard> createState() => _SavedArticleCardState();
+}
+
+class _SavedArticleCardState extends State<_SavedArticleCard> {
+  late final Future<_SavedCardDetails> _detailsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _detailsFuture = _loadDetails();
+  }
+
+  Future<_SavedCardDetails> _loadDetails() async {
+    final results = await Future.wait([
+      fetchFeaturedMedia(widget.savedArticle.featured_media),
+      fetchAuthorName(
+          widget.savedArticle.link, widget.savedArticle.author),
+    ]);
+    return _SavedCardDetails(
+        imageUrl: results[0], authorName: results[1]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.all(10),
+      child: FutureBuilder<_SavedCardDetails>(
+        future: _detailsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox(
+              height: 150,
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final details = snapshot.data ??
+              _SavedCardDetails(imageUrl: '', authorName: '');
+
+          return Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ArticleDetailScreen(
+                        article: widget.savedArticle.toArticle(),
+                        categoryName: widget.savedArticle.categoryName,
+                      ),
+                    ),
+                  ),
+                  child: NetworkImageWithFallback(
+                    imageUrl: details.imageUrl,
+                    fallbackAssetPath: 'assets/logo.png',
+                    width: 125,
+                    height: 125,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ArticleDetailScreen(
+                          article: widget.savedArticle.toArticle(),
+                          categoryName: widget.savedArticle.categoryName,
+                        ),
+                      ),
+                    ),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ArticleDetailScreen(
-                                article: savedArticle.toArticle(),
-                                categoryName: savedArticle.categoryName,
-                              ),
-                            ),
-                          ),
-                          child: FutureBuilder<String>(
-                            future: fetchFeaturedMedia(savedArticle.featured_media),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return Container(
-                                  width: 125,
-                                  height: 125,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[300],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                );
-                              } else {
-                                return NetworkImageWithFallback(
-                                  imageUrl: snapshot.data ?? '',
-                                  fallbackAssetPath: 'assets/logo.png',
-                                  width: 125,
-                                  height: 125,
-                                  borderRadius: BorderRadius.circular(8),
-                                );
-                              }
-                            },
+                        Text(
+                          widget.savedArticle.title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ArticleDetailScreen(
-                                  article: savedArticle.toArticle(),
-                                  categoryName: savedArticle.categoryName,
-                                ),
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  savedArticle.title,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(formattedDate),
-                                    const SizedBox(height: 5),
-                                    Text(savedDate),
-                                    const SizedBox(height: 5),
-                                    FutureBuilder<String>(
-                                      future: fetchAuthorName(savedArticle.link, savedArticle.author),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return const CircularProgressIndicator();
-                                        } else if (snapshot.hasError) {
-                                          return const Text('Error');
-                                        } else {
-                                          return Text('👤 ${snapshot.data}');
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                              ],
-                            ),
-                          ),
+                        const SizedBox(height: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(widget.formattedDate),
+                            const SizedBox(height: 5),
+                            Text(widget.savedDate),
+                            const SizedBox(height: 5),
+                            Text('👤 ${details.authorName}'),
+                          ],
                         ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.bookmark,
-                            color: Colors.blue,
-                          ),
-                          onPressed: () {
-                            savedArticlesProvider.removeArticle(savedArticle.id);
-                          },
-                        ),
+                        const SizedBox(height: 10),
                       ],
                     ),
                   ),
-                );
-              },
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.bookmark,
+                    color: Colors.blue,
+                  ),
+                  onPressed: widget.onRemove,
+                ),
+              ],
             ),
+          );
+        },
       ),
     );
   }
@@ -196,4 +226,11 @@ class SavedArticlesScreen extends StatelessWidget {
       return '';
     }
   }
+}
+
+class _SavedCardDetails {
+  final String imageUrl;
+  final String authorName;
+
+  _SavedCardDetails({required this.imageUrl, required this.authorName});
 }

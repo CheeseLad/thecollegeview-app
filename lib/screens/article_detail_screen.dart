@@ -62,10 +62,10 @@ class ArticleDetailScreen extends StatelessWidget {
                     const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(formattedDate),
-                  const SizedBox(width: 10),
                   FutureBuilder<String>(
                     future: fetchAuthorName(article.link, article.author),
                     builder: (context, snapshot) {
@@ -76,7 +76,7 @@ class ArticleDetailScreen extends StatelessWidget {
                       } else {
                         // Check if categoryName is a tag (starts with "Tag: ")
                         final isTag = categoryName.startsWith('Tag: ');
-                        final authorText = isTag 
+                        final authorText = isTag
                             ? 'by ${snapshot.data}'
                             : 'by ${snapshot.data} in $categoryName';
                         return Text(authorText,

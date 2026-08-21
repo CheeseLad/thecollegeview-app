@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import '../providers/article_provider.dart';
-import '../providers/saved_articles_provider.dart';
 import '../models/article.dart';
 import '../screens/article_detail_screen.dart';
 import '../services/wp_api_service.dart';
@@ -19,7 +18,6 @@ class ArticleList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final articleProvider = Provider.of<ArticleProvider>(context);
-    final savedArticlesProvider = Provider.of<SavedArticlesProvider>(context);
 
     return Column(
       children: [
@@ -27,89 +25,10 @@ class ArticleList extends StatelessWidget {
           child: ListView.builder(
             itemCount: articleProvider.articles.length,
             itemBuilder: (context, index) {
-              Article article = articleProvider.articles[index];
-              String formattedDate =
-                  '⏰ ${DateFormat('MMMM d, y').format(DateTime.parse(article.date))}';
-
-              return Card(
-                margin: const EdgeInsets.all(10),
-                child: InkWell(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ArticleDetailScreen(
-                          article: article, categoryName: categoryName),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FutureBuilder<String>(
-                          future: fetchFeaturedMedia(article.featured_media),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return Container(
-                                width: 125,
-                                height: 125,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            } else {
-                              return NetworkImageWithFallback(
-                                imageUrl: snapshot.data ?? '',
-                                fallbackAssetPath: 'assets/logo.png',
-                                width: 125,
-                                height: 125,
-                                borderRadius: BorderRadius.circular(8),
-                              );
-                            }
-                          },
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(article.title,
-                                  style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Text(formattedDate),
-                                  const SizedBox(width: 10),
-                                  FutureBuilder<String>(
-                                    future: fetchAuthorName(article.link, article.author),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return const CircularProgressIndicator();
-                                      } else if (snapshot.hasError) {
-                                        return const Text('Error');
-                                      } else {
-                                        return Text('👤 ${snapshot.data}');
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              final article = articleProvider.articles[index];
+              return _ArticleCard(
+                article: article,
+                categoryName: categoryName,
               );
             },
           ),
@@ -144,26 +63,135 @@ class ArticleList extends StatelessWidget {
       ],
     );
   }
+}
 
+class _ArticleCard extends StatefulWidget {
+  final Article article;
+  final String categoryName;
 
-  Future<String> fetchAuthorName(String articleUrl, int authorId) async {
-    final authorName = await WpApiService.fetchAuthorInfo(articleUrl, authorId);
-    return HtmlUtils.decodeHtmlEntities(authorName);
+  const _ArticleCard({
+    required this.article,
+    required this.categoryName,
+  });
+
+  @override
+  State<_ArticleCard> createState() => _ArticleCardState();
+}
+
+class _ArticleCardState extends State<_ArticleCard> {
+  late final Future<_CardDetails> _detailsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _detailsFuture = _loadDetails();
   }
 
-  Future<String> fetchFeaturedMedia(int mediaId) async {
-    try {
-      final response = await WpApiService.get(
-          Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/media/$mediaId'));
+  Future<_CardDetails> _loadDetails() async {
+    final results = await Future.wait([
+      _fetchFeaturedMedia(widget.article.featured_media),
+      _fetchAuthorName(widget.article.link, widget.article.author),
+    ]);
+    return _CardDetails(imageUrl: results[0], authorName: results[1]);
+  }
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return data['source_url'] ?? '';
-      } else {
-        return '';
-      }
-    } catch (e) {
+  @override
+  Widget build(BuildContext context) {
+    final String formattedDate =
+        '⏰ ${DateFormat('MMMM d, y').format(DateTime.parse(widget.article.date))}';
+
+    return Card(
+      margin: const EdgeInsets.all(10),
+      child: FutureBuilder<_CardDetails>(
+        future: _detailsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox(
+              height: 150,
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final details =
+              snapshot.data ?? _CardDetails(imageUrl: '', authorName: '');
+
+          return InkWell(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ArticleDetailScreen(
+                  article: widget.article,
+                  categoryName: widget.categoryName,
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  NetworkImageWithFallback(
+                    imageUrl: details.imageUrl,
+                    fallbackAssetPath: 'assets/logo.png',
+                    width: 125,
+                    height: 125,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(widget.article.title,
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(formattedDate),
+                            const SizedBox(height: 5),
+                            Text('👤 ${details.authorName}'),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CardDetails {
+  final String imageUrl;
+  final String authorName;
+
+  _CardDetails({required this.imageUrl, required this.authorName});
+}
+
+Future<String> _fetchAuthorName(String articleUrl, int authorId) async {
+  final authorName = await WpApiService.fetchAuthorInfo(articleUrl, authorId);
+  return HtmlUtils.decodeHtmlEntities(authorName);
+}
+
+Future<String> _fetchFeaturedMedia(int mediaId) async {
+  try {
+    final response = await WpApiService.get(
+        Uri.parse('https://tcvappapi.jakefarrell.ie/wp-json/wp/v2/media/$mediaId'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['source_url'] ?? '';
+    } else {
       return '';
     }
+  } catch (e) {
+    return '';
   }
 }
