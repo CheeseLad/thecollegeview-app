@@ -17,6 +17,7 @@ class ArticleProvider with ChangeNotifier {
   int _totalPages = 1;
   int? _selectedCategory;
   int? _selectedTag;
+  List<int> _pageSizes = [];
 
   List<Article> get articles => _articles;
   List<Category> get categories => _categories;
@@ -132,8 +133,26 @@ class ArticleProvider with ChangeNotifier {
         List<Article> loadedArticles = (json.decode(response.body) as List)
             .map((data) => Article.fromJson(data))
             .toList();
-        _articles = loadedArticles;
-        _totalPages = int.parse(response.headers['x-wp-totalpages']!);
+
+        if (_currentPage == 1) {
+          _articles = loadedArticles;
+          _pageSizes = [loadedArticles.length];
+        } else {
+          _articles.addAll(loadedArticles);
+          _pageSizes.add(loadedArticles.length);
+        }
+
+        final totalPagesHeader = response.headers['x-wp-totalpages']
+            ?? response.headers['X-WP-TotalPages'];
+        if (totalPagesHeader != null) {
+          _totalPages = int.parse(totalPagesHeader);
+        } else if (loadedArticles.length == 10) {
+          if (_currentPage + 1 > _totalPages) {
+            _totalPages = _currentPage + 1;
+          }
+        } else {
+          _totalPages = _currentPage;
+        }
         _error = null;
       } else {
         _error = 'Failed to load articles';
@@ -147,6 +166,8 @@ class ArticleProvider with ChangeNotifier {
   }
 
   Future<void> searchArticles(String searchQuery) async {
+    _currentPage = 1;
+    _totalPages = 1;
     final url =
         '${AppUrls.apiBase}/wp-json/wp/v2/posts?search=$searchQuery';
     try {
@@ -164,6 +185,7 @@ class ArticleProvider with ChangeNotifier {
   }
 
   void nextPage() {
+    if (_loading) return;
     if (_currentPage < _totalPages) {
       _currentPage++;
       fetchArticles();
@@ -171,20 +193,25 @@ class ArticleProvider with ChangeNotifier {
   }
 
   void previousPage() {
-    if (_currentPage > 1) {
+    if (_loading) return;
+    if (_currentPage > 1 && _pageSizes.length >= _currentPage) {
       _currentPage--;
-      fetchArticles();
+      _articles = _articles.sublist(0, _articles.length - _pageSizes[_currentPage]);
+      _pageSizes = _pageSizes.sublist(0, _currentPage);
+      notifyListeners();
     }
   }
 
   void selectCategory(int? categoryId) {
     _selectedCategory = categoryId;
     _currentPage = 1;
+    _pageSizes = [];
     fetchArticles();
   }
 
   Future<void> refreshArticles() async {
     _currentPage = 1;
+    _pageSizes = [];
     await fetchArticles();
   }
 
@@ -212,6 +239,7 @@ class ArticleProvider with ChangeNotifier {
     _selectedTag = tagId;
     _selectedCategory = null;
     _currentPage = 1;
+    _pageSizes = [];
     await fetchArticles();
   }
 
@@ -219,6 +247,7 @@ class ArticleProvider with ChangeNotifier {
     _selectedTag = tagId;
     _selectedCategory = null;
     _currentPage = 1;
+    _pageSizes = [];
     fetchArticles();
   }
 
@@ -226,6 +255,7 @@ class ArticleProvider with ChangeNotifier {
     _selectedCategory = null;
     _selectedTag = null;
     _currentPage = 1;
+    _pageSizes = [];
     fetchArticles();
   }
 

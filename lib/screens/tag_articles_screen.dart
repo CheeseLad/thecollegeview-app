@@ -36,7 +36,7 @@ class _TagArticlesScreenState extends State<TagArticlesScreen> {
         },
         child: Consumer<ArticleProvider>(
           builder: (context, articleProvider, child) {
-            if (articleProvider.loading) {
+            if (articleProvider.articles.isEmpty && articleProvider.loading) {
               return const Center(
                 child: CircularProgressIndicator(),
               );
@@ -99,7 +99,6 @@ class _TagArticlesScreenState extends State<TagArticlesScreen> {
 
             return ArticleList(
               categoryName: 'Tag: ${widget.tag.name}',
-              articles: articleProvider.articles,
             );
           },
         ),

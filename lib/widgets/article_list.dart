@@ -10,58 +10,64 @@ import '../utils/html_utils.dart';
 import '../config/app_urls.dart';
 import 'network_image_with_fallback.dart';
 
-class ArticleList extends StatelessWidget {
+class ArticleList extends StatefulWidget {
   final String categoryName;
 
-  const ArticleList(
-      {super.key, required this.categoryName, required List<Article> articles});
+  const ArticleList({super.key, required this.categoryName});
+
+  @override
+  State<ArticleList> createState() => _ArticleListState();
+}
+
+class _ArticleListState extends State<ArticleList> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final articleProvider = Provider.of<ArticleProvider>(context, listen: false);
+    if (articleProvider.loading) return;
+
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (articleProvider.currentPage < articleProvider.totalPages) {
+        articleProvider.nextPage();
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final articleProvider = Provider.of<ArticleProvider>(context);
 
-    return Column(
-      children: [
-        Expanded(
-          child: ListView.builder(
-            itemCount: articleProvider.articles.length,
-            itemBuilder: (context, index) {
-              final article = articleProvider.articles[index];
-              return _ArticleCard(
-                article: article,
-                categoryName: categoryName,
-              );
-            },
-          ),
-        ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, size: 32),
-                  onPressed: articleProvider.currentPage > 1
-                      ? () => articleProvider.previousPage()
-                      : null,
-                ),
-                Text(
-                  'Page ${articleProvider.currentPage} of ${articleProvider.totalPages}',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios, size: 32),
-                  onPressed:
-                      articleProvider.currentPage < articleProvider.totalPages
-                          ? () => articleProvider.nextPage()
-                          : null,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+    return ListView.builder(
+      controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: articleProvider.articles.length + (articleProvider.loading ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index >= articleProvider.articles.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final article = articleProvider.articles[index];
+        return _ArticleCard(
+          article: article,
+          categoryName: widget.categoryName,
+        );
+      },
     );
   }
 }

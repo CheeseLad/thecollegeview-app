@@ -64,8 +64,7 @@ class _SearchPageState extends State<SearchPage> {
       ),
       body: _filteredArticles.isEmpty
           ? const Center(child: Text('No articles found.'))
-          : ArticleList(
-              articles: _filteredArticles, categoryName: 'Search Results'),
+          : ArticleList(categoryName: 'Search Results'),
     );
   }
 }

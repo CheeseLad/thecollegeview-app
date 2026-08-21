@@ -25,9 +25,9 @@ class Article {
     List<int> tags = [];
     if (json['tags'] != null) {
       tags = List<int>.from(json['tags']);
-      print('Article ${json['id']} has tags: $tags'); // Debug logging
+      // print('Article ${json['id']} has tags: $tags'); // Debug logging
     } else {
-      print('Article ${json['id']} has no tags field'); // Debug logging
+      // print('Article ${json['id']} has no tags field'); // Debug logging
     }
     
     return Article(

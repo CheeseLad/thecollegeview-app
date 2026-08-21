@@ -51,7 +51,6 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
         },
         child: ArticleList(
           categoryName: widget.categoryName,
-          articles: const [],
         ),
       ),
     );
