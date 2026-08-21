@@ -66,7 +66,11 @@ class ArticleDetailScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(formattedDate),
+                  Text(formattedDate,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                      )),
                   FutureBuilder<String>(
                     future: fetchAuthorName(article.link, article.author),
                     builder: (context, snapshot) {
@@ -75,16 +79,22 @@ class ArticleDetailScreen extends StatelessWidget {
                       } else if (snapshot.hasError) {
                         return const Text('Error');
                       } else {
-                        // Check if categoryName is a tag (starts with "Tag: ")
-                        final isTag = categoryName.startsWith('Tag: ');
-                        final authorText = isTag
-                            ? 'by ${snapshot.data}'
-                            : 'by ${snapshot.data} in $categoryName';
-                        return Text(authorText,
-                            style: TextStyle(
-                                fontSize: 16, color: Colors.grey[600]));
+                        return Text(
+                          '👤 ${snapshot.data}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        );
                       }
                     },
+                  ),
+                  Text(
+                    '📂 $categoryName',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
