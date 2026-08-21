@@ -47,6 +47,3 @@ app.*.map.json
 .env.local
 .env.*.local
 
-# Firebase config files (if they contain sensitive data)
-# Note: google-services.json and GoogleService-Info.plist are typically needed
-# but should be reviewed for sensitive information
