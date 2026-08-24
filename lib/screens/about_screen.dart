@@ -79,9 +79,10 @@ class _AboutScreenState extends State<AboutScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                    child: SelectionArea(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                         Text(
                           aboutContent.title,
                           style: const TextStyle(
@@ -108,6 +109,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   ),
                 ),
               ),
+            ),
             ),
           );
         },

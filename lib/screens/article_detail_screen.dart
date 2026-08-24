@@ -54,9 +54,10 @@ class ArticleDetailScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(15.0),
           child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            child: SelectionArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               Text(
                 article.title,
                 style:
@@ -301,7 +302,8 @@ class ArticleDetailScreen extends StatelessWidget {
         ),
       ),
     ),
-    );
+  ),
+);
   }
 
   Future<String> fetchAuthorName(String articleUrl, int authorId) async {

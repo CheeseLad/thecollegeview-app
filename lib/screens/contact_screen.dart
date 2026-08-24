@@ -69,8 +69,9 @@ class _ContactScreenState extends State<ContactScreen> {
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 900),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: SelectionArea(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -178,6 +179,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   ],
                 ),
               ),
+            ),
             ),
           );
         },

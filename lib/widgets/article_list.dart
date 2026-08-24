@@ -151,16 +151,16 @@ class _ArticleCardState extends State<_ArticleCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.article.title,
+                        SelectableText(widget.article.title,
                             style: const TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(formattedDate),
+                            SelectableText(formattedDate),
                             const SizedBox(height: 5),
-                            Text('👤 ${details.authorName}'),
+                            SelectableText('👤 ${details.authorName}'),
                           ],
                         ),
                         const SizedBox(height: 10),
