@@ -1,4 +1,4 @@
-package com.example.thecollegeview
+package ie.thecollegeview.app
 
 import io.flutter.embedding.android.FlutterActivity
 
