@@ -2,16 +2,28 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import '../config/app_urls.dart';
+import 'cache_service.dart';
 
 class WpApiService {
   static const String _authorInfoEndpoint =
       '${AppUrls.apiBase}/get-subheading';
 
+  static final CacheService _cache = CacheService();
+
   static Future<http.Response> get(
     Uri uri, {
     Map<String, String>? headers,
-  }) {
-    return http.get(uri, headers: headers);
+  }) async {
+    final cached = _cache.getCached(uri);
+    if (cached != null) {
+      return cached;
+    }
+
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200) {
+      await _cache.setCached(uri, response);
+    }
+    return response;
   }
 
   static Future<String> fetchAuthorInfo(
@@ -19,7 +31,7 @@ class WpApiService {
     int authorId,
   ) async {
     try {
-      final response = await http.get(
+      final response = await get(
         Uri.parse(_authorInfoEndpoint).replace(
           queryParameters: {'url': articleUrl},
         ),

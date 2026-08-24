@@ -64,6 +64,7 @@ class _ArticleListState extends State<ArticleList> {
         }
         final article = articleProvider.articles[index];
         return _ArticleCard(
+          key: ValueKey(article.id),
           article: article,
           categoryName: widget.categoryName,
         );
@@ -77,6 +78,7 @@ class _ArticleCard extends StatefulWidget {
   final String categoryName;
 
   const _ArticleCard({
+    super.key,
     required this.article,
     required this.categoryName,
   });
