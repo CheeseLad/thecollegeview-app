@@ -8,6 +8,7 @@ import '../screens/contact_screen.dart';
 import '../providers/article_provider.dart';
 import '../models/category.dart';
 import '../config/app_urls.dart';
+import '../theme/app_theme.dart';
 import 'social_media_icon.dart';
 
 class CVNavigationDrawer extends StatelessWidget {
@@ -97,6 +98,24 @@ class CVNavigationDrawer extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => const ContactScreen(),
                       ),
+                    );
+                  },
+                ),
+
+                Consumer<ThemeProvider>(
+                  builder: (context, themeProvider, child) {
+                    final isSystem = themeProvider.themeMode == ThemeMode.system;
+                    final effectiveDark = isSystem
+                        ? MediaQuery.of(context).platformBrightness == Brightness.dark
+                        : themeProvider.isDark;
+
+                    return ListTile(
+                      title: Text(effectiveDark ? 'Light Mode' : 'Dark Mode'),
+                      leading: Icon(effectiveDark ? Icons.light_mode : Icons.dark_mode),
+                      onTap: () {
+                        themeProvider.cycleThemeMode();
+                        Navigator.pop(context);
+                      },
                     );
                   },
                 ),

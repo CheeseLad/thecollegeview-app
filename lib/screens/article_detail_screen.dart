@@ -39,8 +39,8 @@ class ArticleDetailScreen extends StatelessWidget {
                     ? Icons.bookmark
                     : Icons.bookmark_border,
                 color: savedArticlesProvider.isArticleSaved(article.id)
-                    ? Colors.blue
-                    : Colors.black87,
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurface,
               ),
               onPressed: () {
                 savedArticlesProvider.toggleSaveArticle(article, categoryName);
@@ -50,7 +50,7 @@ class ArticleDetailScreen extends StatelessWidget {
         ],
       ),
       body: Container(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         child: Padding(
           padding: const EdgeInsets.all(15.0),
           child: SingleChildScrollView(
@@ -67,11 +67,11 @@ class ArticleDetailScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(formattedDate,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      )),
+                   Text(formattedDate,
+                       style: TextStyle(
+                         fontSize: 16,
+                         color: Theme.of(context).colorScheme.onSurfaceVariant,
+                       )),
                   FutureBuilder<String>(
                     future: fetchAuthorName(article.link, article.author),
                     builder: (context, snapshot) {
@@ -80,23 +80,23 @@ class ArticleDetailScreen extends StatelessWidget {
                       } else if (snapshot.hasError) {
                         return const Text('Error');
                       } else {
-                        return Text(
-                          '👤 ${snapshot.data}',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                          ),
-                        );
+                         return Text(
+                           '👤 ${snapshot.data}',
+                           style: TextStyle(
+                             fontSize: 16,
+                             color: Theme.of(context).colorScheme.onSurfaceVariant,
+                           ),
+                         );
                       }
                     },
                   ),
-                  Text(
-                    '📂 $categoryName',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
+                   Text(
+                     '📂 $categoryName',
+                     style: TextStyle(
+                       fontSize: 16,
+                       color: Theme.of(context).colorScheme.onSurfaceVariant,
+                     ),
+                   ),
                 ],
               ),
               // Show tag on a new line if viewing tagged articles
@@ -127,7 +127,7 @@ class ArticleDetailScreen extends StatelessWidget {
                         width: double.infinity,
                         height: 200,
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Center(
@@ -232,10 +232,10 @@ class ArticleDetailScreen extends StatelessWidget {
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.blue.shade100,
+                                      color: Theme.of(context).colorScheme.primaryContainer,
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: Colors.blue.shade300,
+                                        color: Theme.of(context).colorScheme.primary,
                                         width: 1,
                                       ),
                                     ),
@@ -246,7 +246,7 @@ class ArticleDetailScreen extends StatelessWidget {
                                           tagName,
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: Colors.blue.shade800,
+                                            color: Theme.of(context).colorScheme.onPrimaryContainer,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -254,7 +254,7 @@ class ArticleDetailScreen extends StatelessWidget {
                                         Icon(
                                           Icons.arrow_forward_ios,
                                           size: 12,
-                                          color: Colors.blue.shade800,
+                                          color: Theme.of(context).colorScheme.onPrimaryContainer,
                                         ),
                                       ],
                                     ),
@@ -281,7 +281,7 @@ class ArticleDetailScreen extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black, width: 1.0),
+                    border: Border.all(color: Theme.of(context).colorScheme.onSurface, width: 1.0),
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,

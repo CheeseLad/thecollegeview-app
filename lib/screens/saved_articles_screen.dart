@@ -26,21 +26,21 @@ class SavedArticlesScreen extends StatelessWidget {
           await savedArticlesProvider.refreshSavedArticles();
         },
         child: savedArticlesProvider.savedArticles.isEmpty
-            ? const Center(
+            ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.bookmark_border,
                       size: 64,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     SizedBox(height: 16),
                     Text(
                       'No saved articles yet',
                       style: TextStyle(
                         fontSize: 18,
-                        color: Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -48,7 +48,7 @@ class SavedArticlesScreen extends StatelessWidget {
                       'Tap the bookmark icon to save articles',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -193,9 +193,9 @@ class _SavedArticleCardState extends State<_SavedArticleCard> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.bookmark,
-                    color: Colors.blue,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   onPressed: widget.onRemove,
                 ),

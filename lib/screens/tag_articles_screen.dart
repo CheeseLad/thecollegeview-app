@@ -27,8 +27,8 @@ class _TagArticlesScreenState extends State<TagArticlesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Articles tagged: ${widget.tag.name}'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -47,18 +47,18 @@ class _TagArticlesScreenState extends State<TagArticlesScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
+                     Icon(
+                       Icons.error_outline,
+                       size: 64,
+                       color: Theme.of(context).colorScheme.outline,
+                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      'Error: ${articleProvider.error}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
+                     Text(
+                       'Error: ${articleProvider.error}',
+                       style: TextStyle(
+                         fontSize: 16,
+                         color: Theme.of(context).colorScheme.onSurfaceVariant,
+                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
@@ -81,14 +81,14 @@ class _TagArticlesScreenState extends State<TagArticlesScreen> {
                     Icon(
                       Icons.article_outlined,
                       size: 64,
-                      color: Colors.grey[400],
+                      color: Theme.of(context).colorScheme.outline,
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'No articles found for tag "${widget.tag.name}"',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       textAlign: TextAlign.center,
                     ),

@@ -35,7 +35,7 @@ class NetworkImageWithFallback extends StatelessWidget {
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color: Colors.grey[300],
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: borderRadius,
           ),
           child: const Center(
@@ -51,7 +51,7 @@ class NetworkImageWithFallback extends StatelessWidget {
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color: Colors.grey[300],
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: borderRadius,
           ),
           child: Image.asset(
@@ -61,16 +61,16 @@ class NetworkImageWithFallback extends StatelessWidget {
             fit: fit,
             errorBuilder: (context, error, stackTrace) {
               // If even the fallback asset fails, show a placeholder icon
-              return Container(
-                width: width,
-                height: height,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: borderRadius,
-                ),
-                child: const Icon(
+               return Container(
+                 width: width,
+                 height: height,
+                 decoration: BoxDecoration(
+                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                   borderRadius: borderRadius,
+                 ),
+                child: Icon(
                   Icons.image_not_supported,
-                  color: Colors.grey,
+                  color: Theme.of(context).disabledColor,
                   size: 48,
                 ),
               );

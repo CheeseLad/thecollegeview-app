@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'theme/app_theme.dart';
 import 'services/cache_service.dart';
 import 'providers/article_provider.dart';
 import 'providers/saved_articles_provider.dart';
@@ -41,27 +42,28 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider.value(value: _articleProvider),
         ChangeNotifierProvider(create: (context) => SavedArticlesProvider()),
         ChangeNotifierProvider(create: (context) => PageContentProvider()),
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        navigatorKey: _navigatorKey,
-        debugShowCheckedModeBanner: false,
-        title: 'The College View',
-        theme: ThemeData(
-          scaffoldBackgroundColor: Colors.grey[400],
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            background: Colors.grey[400]!,
-          ),
-        ),
-        home: const ArticlesScreen(categoryName: "All Articles"),
-        routes: {
-          '/article': (context) {
-            final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-            return ArticleDetailScreen(
-              article: args['article'],
-              categoryName: args['categoryName'] ?? 'All Articles',
-            );
-          },
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            navigatorKey: _navigatorKey,
+            debugShowCheckedModeBanner: false,
+            title: 'The College View',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            home: const ArticlesScreen(categoryName: "All Articles"),
+            routes: {
+              '/article': (context) {
+                final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+                return ArticleDetailScreen(
+                  article: args['article'],
+                  categoryName: args['categoryName'] ?? 'All Articles',
+                );
+              },
+            },
+          );
         },
       ),
     );

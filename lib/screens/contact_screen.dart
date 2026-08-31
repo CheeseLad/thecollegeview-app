@@ -40,7 +40,7 @@ class _ContactScreenState extends State<ContactScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error, size: 64, color: Colors.red),
+                  Icon(Icons.error, size: 64, color: Theme.of(context).colorScheme.error),
                   const SizedBox(height: 16),
                   Text(
                     'Error loading content: ${pageContentProvider.error}',
@@ -212,9 +212,9 @@ class _ContactScreenState extends State<ContactScreen> {
               onTap: () => _launchEmail(email),
               child: Text(
                 email,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: Colors.blue,
+                  color: Theme.of(context).colorScheme.primary,
                   // decoration: TextDecoration.underline,
                 ),
               ),
