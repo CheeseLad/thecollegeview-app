@@ -39,7 +39,7 @@ class ArticleProvider with ChangeNotifier {
     try {
       final config = await CategoryConfig.load();
 
-      final url =
+      const url =
           '${AppUrls.apiBase}/wp-json/wp/v2/categories'
           '?per_page=100'
           '&_fields=id,name,slug,parent,count';

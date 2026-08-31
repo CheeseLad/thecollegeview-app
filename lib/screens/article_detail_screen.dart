@@ -180,7 +180,6 @@ class ArticleDetailScreen extends StatelessWidget {
               const SizedBox(height: 10),
               // Display tags if available
               if (article.tags.isNotEmpty) ...[
-                // Text('Debug: Article has ${article.tags.length} tags: ${article.tags}'), // Debug
                 FutureBuilder<List<String>>(
                   future: fetchTags(article.tags),
                   builder: (context, snapshot) {
@@ -272,11 +271,11 @@ class ArticleDetailScreen extends StatelessWidget {
                   },
                 ),
               ] else ...[
-                const Text('Debug: Article has no tags'), // Debug
+                const SizedBox.shrink(),
               ],
               GestureDetector(
                 onTap: () {
-                  Share.share(article.link);
+                  Share.shareUri(Uri.parse(article.link));
                 },
                 child: Container(
                   width: double.infinity,
