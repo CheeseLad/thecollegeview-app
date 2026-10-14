@@ -28,7 +28,7 @@ class _TagArticlesScreenState extends State<TagArticlesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Articles tagged: ${widget.tag.name}'),
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
       ),
       body: RefreshIndicator(
