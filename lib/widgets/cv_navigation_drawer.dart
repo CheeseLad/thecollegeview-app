@@ -14,6 +14,14 @@ import 'social_media_icon.dart';
 class CVNavigationDrawer extends StatelessWidget {
   const CVNavigationDrawer({super.key});
 
+  void _navigateTo(BuildContext context, Widget screen) {
+    Navigator.pop(context);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final articleProvider = Provider.of<ArticleProvider>(context);
@@ -26,30 +34,23 @@ class CVNavigationDrawer extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: <Widget>[
                 DrawerHeader(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Center(
-                        child: Image.asset(
-                          'assets/logo.png',
-                          height: 135,
-                          width: 300,
-                        ),
-                      ),
-                    ],
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Center(
+                    child: Image.asset(
+                      'assets/logo.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
                 ListTile(
+                  leading: const Icon(Icons.newspaper),
                   title: const Text('All Articles'),
                   onTap: () {
                     articleProvider.clearFilters();
-                    Navigator.pop(context);
-                    Navigator.push(
+                    _navigateTo(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const ArticlesScreen(categoryName: "All Articles"),
-                      ),
+                      const ArticlesScreen(categoryName: "All Articles"),
                     );
                   },
                 ),
@@ -57,60 +58,52 @@ class CVNavigationDrawer extends StatelessWidget {
                   title: const Text('Saved Articles'),
                   leading: const Icon(Icons.bookmark),
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SavedArticlesScreen(),
-                      ),
-                    );
+                    _navigateTo(context, const SavedArticlesScreen());
                   },
                 ),
                 ...articleProvider.categories.map((category) {
                   return _buildCategoryTile(context, category);
                 }),
+                const Divider(),
                 ListTile(
                   title: const Text('About'),
-                  leading: const Icon(Icons.info),
+                  leading: const Icon(Icons.info_outline),
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AboutScreen(),
-                      ),
-                    );
+                    _navigateTo(context, const AboutScreen());
                   },
                 ),
                 ListTile(
                   title: const Text('Contact'),
-                  leading: const Icon(Icons.contact_mail),
+                  leading: const Icon(Icons.contact_mail_outlined),
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ContactScreen(),
-                      ),
-                    );
+                    _navigateTo(context, const ContactScreen());
                   },
                 ),
                 Consumer<ThemeProvider>(
                   builder: (context, themeProvider, child) {
-                    final isSystem =
-                        themeProvider.themeMode == ThemeMode.system;
-                    final effectiveDark = isSystem
-                        ? MediaQuery.of(context).platformBrightness ==
-                            Brightness.dark
-                        : themeProvider.isDark;
+                    IconData icon;
+                    String label;
+                    switch (themeProvider.themeMode) {
+                      case ThemeMode.system:
+                        icon = Icons.brightness_auto;
+                        label = 'Theme: System';
+                        break;
+                      case ThemeMode.light:
+                        icon = Icons.light_mode;
+                        label = 'Theme: Light';
+                        break;
+                      case ThemeMode.dark:
+                        icon = Icons.dark_mode;
+                        label = 'Theme: Dark';
+                        break;
+                    }
 
                     return ListTile(
-                      title: Text(effectiveDark ? 'Light Mode' : 'Dark Mode'),
-                      leading: Icon(
-                          effectiveDark ? Icons.light_mode : Icons.dark_mode),
+                      title: Text(label),
+                      subtitle: const Text('Tap to cycle theme'),
+                      leading: Icon(icon),
                       onTap: () {
                         themeProvider.cycleThemeMode();
-                        Navigator.pop(context);
                       },
                     );
                   },
@@ -157,12 +150,9 @@ class CVNavigationDrawer extends StatelessWidget {
         title: Text(category.name),
         onTap: () {
           articleProvider.selectCategory(category.id);
-          Navigator.pop(context);
-          Navigator.push(
+          _navigateTo(
             context,
-            MaterialPageRoute(
-              builder: (context) => ArticlesScreen(categoryName: category.name),
-            ),
+            ArticlesScreen(categoryName: category.name),
           );
         },
       );
@@ -178,13 +168,10 @@ class CVNavigationDrawer extends StatelessWidget {
           title: Text('All ${category.name}'),
           onTap: () {
             articleProvider.selectCategory(category.id);
-            Navigator.pop(context);
-            Navigator.push(
+            _navigateTo(
               context,
-              MaterialPageRoute(
-                builder: (context) => ArticlesScreen(
-                  categoryName: 'All ${category.name}',
-                ),
+              ArticlesScreen(
+                categoryName: 'All ${category.name}',
               ),
             );
           },

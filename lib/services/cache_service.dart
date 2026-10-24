@@ -11,11 +11,17 @@ class CacheService {
   CacheService._internal();
 
   Future<void> init() async {
-    _box = await Hive.openBox<Map>(_boxName);
+    try {
+      _box = await Hive.openBox<Map>(_boxName);
+    } catch (_) {
+      await Hive.deleteBoxFromDisk(_boxName);
+      _box = await Hive.openBox<Map>(_boxName);
+    }
     _clearExpired();
   }
 
   http.Response? getCached(Uri uri) {
+    if (!_box.isOpen) return null;
     final key = uri.toString();
     final entry = _box.get(key);
 
@@ -41,6 +47,7 @@ class CacheService {
   }
 
   Future<void> setCached(Uri uri, http.Response response) async {
+    if (!_box.isOpen || response.statusCode != 200) return;
     final key = uri.toString();
     await _box.put(key, {
       'body': response.body,
@@ -51,8 +58,9 @@ class CacheService {
   }
 
   Future<void> _clearExpired() async {
+    if (!_box.isOpen) return;
     final now = DateTime.now().millisecondsSinceEpoch;
-    final keysToDelete = <String>[];
+    final keysToDelete = <dynamic>[];
 
     for (final key in _box.keys) {
       final entry = _box.get(key);
@@ -60,7 +68,7 @@ class CacheService {
 
       final timestamp = entry['timestamp'] as int?;
       if (timestamp == null || now - timestamp > _ttlMs) {
-        keysToDelete.add(key as String);
+        keysToDelete.add(key);
       }
     }
 
@@ -70,6 +78,8 @@ class CacheService {
   }
 
   Future<void> clear() async {
-    await _box.clear();
+    if (_box.isOpen) {
+      await _box.clear();
+    }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/page_content_provider.dart';
 import '../widgets/cv_navigation_drawer.dart';
 
@@ -96,6 +97,15 @@ class _AboutScreenState extends State<AboutScreen> {
                             aboutContent.content,
                             textStyle:
                                 const TextStyle(fontSize: 16, height: 1.5),
+                            onTapUrl: (url) async {
+                              final uri = Uri.tryParse(url);
+                              if (uri != null && await canLaunchUrl(uri)) {
+                                await launchUrl(uri,
+                                    mode: LaunchMode.externalApplication);
+                                return true;
+                              }
+                              return false;
+                            },
                           ),
                           const SizedBox(height: 30),
                           const Text(

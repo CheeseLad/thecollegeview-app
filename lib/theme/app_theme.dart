@@ -1,14 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class ThemeProvider extends ChangeNotifier {
+  static const String _boxName = 'settings';
+  static const String _themeKey = 'themeMode';
   ThemeMode _themeMode = ThemeMode.system;
+  Box? _box;
 
   ThemeMode get themeMode => _themeMode;
+
+  Future<void> init() async {
+    try {
+      _box = await Hive.openBox(_boxName);
+      final savedMode = _box?.get(_themeKey) as String?;
+      if (savedMode == 'light') {
+        _themeMode = ThemeMode.light;
+      } else if (savedMode == 'dark') {
+        _themeMode = ThemeMode.dark;
+      } else {
+        _themeMode = ThemeMode.system;
+      }
+    } catch (_) {
+      _themeMode = ThemeMode.system;
+    }
+    notifyListeners();
+  }
 
   bool get isDark {
     if (_themeMode == ThemeMode.light) return false;
     if (_themeMode == ThemeMode.dark) return true;
-    return false;
+    return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+        Brightness.dark;
   }
 
   String get themeModeLabel {
@@ -24,6 +46,7 @@ class ThemeProvider extends ChangeNotifier {
 
   void setThemeMode(ThemeMode mode) {
     _themeMode = mode;
+    _saveThemeMode(mode);
     notifyListeners();
   }
 
@@ -39,7 +62,17 @@ class ThemeProvider extends ChangeNotifier {
         _themeMode = ThemeMode.system;
         break;
     }
+    _saveThemeMode(_themeMode);
     notifyListeners();
+  }
+
+  void _saveThemeMode(ThemeMode mode) {
+    if (_box != null && _box!.isOpen) {
+      String value = 'system';
+      if (mode == ThemeMode.light) value = 'light';
+      if (mode == ThemeMode.dark) value = 'dark';
+      _box!.put(_themeKey, value);
+    }
   }
 }
 
@@ -48,7 +81,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: const Color(0xFFBDBDBD),
+      scaffoldBackgroundColor: const Color(0xFFF7F8FA),
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF1976D2),
         brightness: Brightness.light,

@@ -66,6 +66,8 @@ class SavedArticle extends HiveObject {
       author: author,
       featuredMedia: featuredMedia,
       tags: tags,
+      embeddedFeaturedMediaUrl: featuredMediaUrl,
+      embeddedAuthorName: authorName,
     );
   }
 
@@ -89,19 +91,26 @@ class SavedArticle extends HiveObject {
 
   factory SavedArticle.fromMap(Map map) {
     return SavedArticle(
-      id: map['id'],
-      date: map['date'],
-      title: map['title'],
-      content: map['content'],
-      link: map['link'],
-      author: map['author'],
-      featuredMedia: map['featuredMedia'],
-      categoryName: map['categoryName'],
-      savedAt: DateTime.parse(map['savedAt']),
-      tags: List<int>.from(map['tags'] ?? []),
-      featuredMediaUrl: map['featuredMediaUrl'] ?? '',
-      authorName: map['authorName'] ?? '',
-      tagNames: List<String>.from(map['tagNames'] ?? []),
+      id: int.tryParse(map['id']?.toString() ?? '0') ?? 0,
+      date: map['date']?.toString() ?? '',
+      title: map['title']?.toString() ?? '',
+      content: map['content']?.toString() ?? '',
+      link: map['link']?.toString() ?? '',
+      author: int.tryParse(map['author']?.toString() ?? '0') ?? 0,
+      featuredMedia:
+          int.tryParse(map['featuredMedia']?.toString() ?? '0') ?? 0,
+      categoryName: map['categoryName']?.toString() ?? 'All Articles',
+      savedAt: DateTime.tryParse(map['savedAt']?.toString() ?? '') ??
+          DateTime.now(),
+      tags: (map['tags'] as List? ?? [])
+          .map((t) => int.tryParse(t.toString()) ?? 0)
+          .where((t) => t > 0)
+          .toList(),
+      featuredMediaUrl: map['featuredMediaUrl']?.toString() ?? '',
+      authorName: map['authorName']?.toString() ?? '',
+      tagNames: (map['tagNames'] as List? ?? [])
+          .map((t) => t.toString())
+          .toList(),
     );
   }
 }

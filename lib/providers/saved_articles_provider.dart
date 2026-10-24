@@ -12,18 +12,37 @@ class SavedArticlesProvider extends ChangeNotifier {
   List<SavedArticle> get savedArticles => _savedArticles;
 
   Future<void> init() async {
-    _box = await Hive.openBox<Map>(_boxName);
+    try {
+      _box = await Hive.openBox<Map>(_boxName);
+    } catch (_) {
+      // In case of box corruption, attempt recovery
+      await Hive.deleteBoxFromDisk(_boxName);
+      _box = await Hive.openBox<Map>(_boxName);
+    }
     _loadSavedArticles();
   }
 
   void _loadSavedArticles() {
-    _savedArticles =
-        _box.values.map((map) => SavedArticle.fromMap(map)).toList();
-    _savedArticles.sort((a, b) => b.savedAt.compareTo(a.savedAt));
+    final loaded = <SavedArticle>[];
+    for (final key in _box.keys) {
+      final value = _box.get(key);
+      if (value != null) {
+        try {
+          loaded.add(SavedArticle.fromMap(value));
+        } catch (_) {
+          // Ignore malformed entries
+        }
+      }
+    }
+    loaded.sort((a, b) => b.savedAt.compareTo(a.savedAt));
+    _savedArticles = loaded;
     notifyListeners();
   }
 
   bool isArticleSaved(int articleId) {
+    if (_box.isOpen && _box.containsKey(articleId.toString())) {
+      return true;
+    }
     return _savedArticles.any((article) => article.id == articleId);
   }
 
@@ -45,18 +64,28 @@ class SavedArticlesProvider extends ChangeNotifier {
       authorName: authorName,
       tagNames: tagNames,
     );
-    await _box.add(savedArticle.toMap());
+    await _box.put(article.id.toString(), savedArticle.toMap());
     _loadSavedArticles();
   }
 
   Future<void> removeArticle(int articleId) async {
-    final articleToRemove = _savedArticles.firstWhere(
-      (article) => article.id == articleId,
-      orElse: () => throw Exception('Article not found'),
-    );
-
-    final index = _savedArticles.indexOf(articleToRemove);
-    await _box.deleteAt(index);
+    final key = articleId.toString();
+    if (_box.containsKey(key)) {
+      await _box.delete(key);
+    } else {
+      // Legacy fallback: find key whose map has matching id
+      dynamic matchingKey;
+      for (final k in _box.keys) {
+        final val = _box.get(k);
+        if (val != null && val['id'] == articleId) {
+          matchingKey = k;
+          break;
+        }
+      }
+      if (matchingKey != null) {
+        await _box.delete(matchingKey);
+      }
+    }
     _loadSavedArticles();
   }
 
@@ -74,7 +103,9 @@ class SavedArticlesProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _box.close();
+    if (_box.isOpen) {
+      _box.close();
+    }
     super.dispose();
   }
 }

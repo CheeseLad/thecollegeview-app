@@ -18,13 +18,24 @@ Future<void> main() async {
   final savedArticlesProvider = SavedArticlesProvider();
   await savedArticlesProvider.init();
 
-  runApp(MyApp(savedArticlesProvider: savedArticlesProvider));
+  final themeProvider = ThemeProvider();
+  await themeProvider.init();
+
+  runApp(MyApp(
+    savedArticlesProvider: savedArticlesProvider,
+    themeProvider: themeProvider,
+  ));
 }
 
 class MyApp extends StatelessWidget {
   final SavedArticlesProvider savedArticlesProvider;
+  final ThemeProvider themeProvider;
 
-  const MyApp({super.key, required this.savedArticlesProvider});
+  const MyApp({
+    super.key,
+    required this.savedArticlesProvider,
+    required this.themeProvider,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +44,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => ArticleProvider()),
         ChangeNotifierProvider.value(value: savedArticlesProvider),
         ChangeNotifierProvider(create: (context) => PageContentProvider()),
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider.value(value: themeProvider),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

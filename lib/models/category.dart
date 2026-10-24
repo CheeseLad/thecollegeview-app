@@ -10,13 +10,13 @@ class Category {
     required this.id,
     required this.name,
     this.parent,
-    this.subcategories = const [],
-  });
+    List<Category>? subcategories,
+  }) : subcategories = subcategories ?? [];
 
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
-      id: json['id'],
-      name: HtmlUtils.decodeHtmlEntities(json['name']),
+      id: json['id'] ?? 0,
+      name: HtmlUtils.decodeHtmlEntities(json['name'] ?? ''),
       parent: json['parent'],
       subcategories: [],
     );

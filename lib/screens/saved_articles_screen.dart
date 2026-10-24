@@ -56,9 +56,11 @@ class SavedArticlesScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   SavedArticle savedArticle =
                       savedArticlesProvider.savedArticles[index];
-                  String formattedDate =
-                      '⏰ ${DateFormat('MMMM d, y').format(DateTime.parse(savedArticle.date))}';
-                  String savedDate =
+                  final parsedDate = DateTime.tryParse(savedArticle.date);
+                  final String formattedDate = parsedDate != null
+                      ? '⏰ ${DateFormat('MMMM d, y').format(parsedDate)}'
+                      : '';
+                  final String savedDate =
                       '💾 Saved ${DateFormat('MMM d, y').format(savedArticle.savedAt)}';
 
                   return _SavedArticleCard(

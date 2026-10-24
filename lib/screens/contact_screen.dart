@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/page_content_provider.dart';
@@ -190,6 +191,12 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Widget _buildContactSection(String title, String email) {
+    final emailList = email
+        .split('\n')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
     return Card(
       margin: const EdgeInsets.only(bottom: 20),
       elevation: 2,
@@ -210,14 +217,29 @@ class _ContactScreenState extends State<ContactScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => _launchEmail(email),
-              child: Text(
-                email,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.primary,
-                  // decoration: TextDecoration.underline,
+            ...emailList.map(
+              (singleEmail) => Padding(
+                padding: const EdgeInsets.only(bottom: 4.0),
+                child: InkWell(
+                  onTap: () => _launchEmail(singleEmail),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.email_outlined,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        singleEmail,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -228,12 +250,25 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Future<void> _launchEmail(String email) async {
+    final cleanEmail = email.trim();
     final Uri emailUri = Uri(
       scheme: 'mailto',
-      path: email,
+      path: cleanEmail,
     );
-    if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
+    try {
+      if (await canLaunchUrl(emailUri)) {
+        await launchUrl(emailUri);
+        return;
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      await Clipboard.setData(ClipboardData(text: cleanEmail));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Email copied to clipboard: $cleanEmail'),
+        ),
+      );
     }
   }
 }

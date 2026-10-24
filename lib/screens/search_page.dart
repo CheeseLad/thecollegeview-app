@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/article.dart';
@@ -15,35 +16,55 @@ class SearchPage extends StatefulWidget {
 class SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
   List<Article> _filteredArticles = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController.addListener(_onSearchChanged);
-  }
+  bool _isLoading = false;
+  bool _hasSearched = false;
+  Timer? _debounceTimer;
 
   @override
   void dispose() {
-    _searchController.removeListener(_onSearchChanged);
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  void _onSearchChanged() async {
-    final query = _searchController.text;
+  void _onSearchChanged() {
+    _debounceTimer?.cancel();
+    final query = _searchController.text.trim();
+
     if (query.isEmpty) {
       setState(() {
         _filteredArticles = [];
+        _isLoading = false;
+        _hasSearched = false;
       });
       return;
     }
 
-    final articleProvider =
-        Provider.of<ArticleProvider>(context, listen: false);
-    await articleProvider.searchArticles(query);
-
     setState(() {
-      _filteredArticles = articleProvider.articles;
+      _isLoading = true;
+    });
+
+    _debounceTimer = Timer(const Duration(milliseconds: 350), () async {
+      final articleProvider =
+          Provider.of<ArticleProvider>(context, listen: false);
+      final results = await articleProvider.searchArticles(query);
+
+      if (!mounted) return;
+      setState(() {
+        _filteredArticles = results;
+        _isLoading = false;
+        _hasSearched = true;
+      });
+    });
+  }
+
+  void _clearSearch() {
+    _debounceTimer?.cancel();
+    setState(() {
+      _searchController.clear();
+      _filteredArticles = [];
+      _isLoading = false;
+      _hasSearched = false;
     });
   }
 
@@ -54,6 +75,7 @@ class SearchPageState extends State<SearchPage> {
         title: custom_search_bar.SearchBar(
           controller: _searchController,
           onSearchChanged: _onSearchChanged,
+          onClear: _clearSearch,
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -62,9 +84,50 @@ class SearchPageState extends State<SearchPage> {
           },
         ),
       ),
-      body: _filteredArticles.isEmpty
-          ? const Center(child: Text('No articles found.'))
-          : const ArticleList(categoryName: 'Search Results'),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (!_hasSearched && _searchController.text.trim().isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'Type to search articles...',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_filteredArticles.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No articles found.',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ArticleList(
+      categoryName: 'Search Results',
+      articles: _filteredArticles,
     );
   }
 }
