@@ -87,7 +87,7 @@ class AppTheme {
         brightness: Brightness.light,
       ),
       cardTheme: CardThemeData(
-        color: Colors.white,
+        color: const Color.fromARGB(255, 235, 234, 234),
         elevation: 3,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

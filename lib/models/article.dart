@@ -1,4 +1,5 @@
 import '../utils/html_utils.dart';
+import '../services/wp_api_service.dart';
 
 class Article {
   final int id;
@@ -44,20 +45,22 @@ class Article {
 
     // Extract embedded data if present (e.g. from ?_embed)
     String? embeddedMedia;
-    String? embeddedAuthor;
     final embedded = json['_embedded'];
     if (embedded is Map) {
       final mediaList = embedded['wp:featuredmedia'];
       if (mediaList is List && mediaList.isNotEmpty && mediaList[0] is Map) {
         embeddedMedia = mediaList[0]['source_url']?.toString();
       }
-      final authorList = embedded['author'];
-      if (authorList is List && authorList.isNotEmpty && authorList[0] is Map) {
-        final rawAuthor = authorList[0]['name']?.toString();
-        if (rawAuthor != null && rawAuthor.isNotEmpty) {
-          embeddedAuthor = HtmlUtils.decodeHtmlEntities(rawAuthor);
-        }
-      }
+    }
+
+    final featuredMedia =
+        int.tryParse(json['featured_media']?.toString() ?? '0') ?? 0;
+    final link = json['link']?.toString() ?? '';
+
+    if (embeddedMedia != null &&
+        embeddedMedia.isNotEmpty &&
+        featuredMedia > 0) {
+      WpApiService.cacheFeaturedMediaUrl(featuredMedia, embeddedMedia);
     }
 
     return Article(
@@ -65,13 +68,11 @@ class Article {
       date: json['date']?.toString() ?? '',
       title: HtmlUtils.decodeHtmlEntities(titleRendered),
       content: HtmlUtils.decodeHtmlEntitiesPreserveTags(contentRendered),
-      link: json['link']?.toString() ?? '',
+      link: link,
       author: int.tryParse(json['author']?.toString() ?? '0') ?? 0,
-      featuredMedia:
-          int.tryParse(json['featured_media']?.toString() ?? '0') ?? 0,
+      featuredMedia: featuredMedia,
       tags: tags,
       embeddedFeaturedMediaUrl: embeddedMedia,
-      embeddedAuthorName: embeddedAuthor,
     );
   }
 }

@@ -94,49 +94,65 @@ class _SavedArticleCard extends StatefulWidget {
   State<_SavedArticleCard> createState() => _SavedArticleCardState();
 }
 
-class _SavedArticleCardState extends State<_SavedArticleCard> {
+class _SavedArticleCardState extends State<_SavedArticleCard>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late final Future<_SavedCardDetails> _detailsFuture;
+  late _SavedCardDetails _currentDetails;
 
   @override
   void initState() {
     super.initState();
+    final initialImageUrl = widget.savedArticle.featuredMediaUrl.isNotEmpty
+        ? widget.savedArticle.featuredMediaUrl
+        : (WpApiService.getCachedFeaturedMediaUrl(widget.savedArticle.featuredMedia) ?? '');
+
+    final initialAuthorName = widget.savedArticle.authorName.isNotEmpty
+        ? widget.savedArticle.authorName
+        : (WpApiService.getCachedAuthorName(widget.savedArticle.link) ?? '');
+
+    _currentDetails = _SavedCardDetails(
+      imageUrl: initialImageUrl,
+      authorName: initialAuthorName,
+    );
+
     _detailsFuture = _loadDetails();
   }
 
   Future<_SavedCardDetails> _loadDetails() async {
     final savedArticle = widget.savedArticle;
 
-    String imageUrl = savedArticle.featuredMediaUrl;
+    String imageUrl = _currentDetails.imageUrl;
     if (imageUrl.isEmpty) {
       imageUrl =
           await WpApiService.fetchFeaturedMediaUrl(savedArticle.featuredMedia);
     }
 
-    String authorName = savedArticle.authorName;
+    String authorName = _currentDetails.authorName;
     if (authorName.isEmpty) {
       authorName = await WpApiService.fetchAuthorName(
           savedArticle.link, savedArticle.author);
     }
 
-    return _SavedCardDetails(imageUrl: imageUrl, authorName: authorName);
+    final details = _SavedCardDetails(imageUrl: imageUrl, authorName: authorName);
+    if (mounted) {
+      _currentDetails = details;
+    }
+    return details;
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Card(
       margin: const EdgeInsets.all(10),
       child: FutureBuilder<_SavedCardDetails>(
         future: _detailsFuture,
+        initialData: _currentDetails,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SizedBox(
-              height: 150,
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          final details =
-              snapshot.data ?? _SavedCardDetails(imageUrl: '', authorName: '');
+          final details = snapshot.data ?? _currentDetails;
 
           return Padding(
             padding: const EdgeInsets.all(15.0),
@@ -198,7 +214,9 @@ class _SavedArticleCardState extends State<_SavedArticleCard> {
                             const SizedBox(height: 5),
                             Text(widget.savedDate),
                             const SizedBox(height: 5),
-                            Text('👤 ${details.authorName}'),
+                            Text(
+                              '👤 ${details.authorName.isNotEmpty ? details.authorName : WpApiService.fallbackAuthorName}',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 10),

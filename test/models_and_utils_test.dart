@@ -3,6 +3,7 @@ import 'package:thecollegeview/models/article.dart';
 import 'package:thecollegeview/models/category.dart';
 import 'package:thecollegeview/models/saved_article.dart';
 import 'package:thecollegeview/utils/html_utils.dart';
+import 'package:thecollegeview/services/wp_api_service.dart';
 
 void main() {
   group('Article Model Tests', () {
@@ -37,7 +38,7 @@ void main() {
       expect(article.tags, [1, 2, 3]);
       expect(article.embeddedFeaturedMediaUrl,
           'https://thecollegeview.ie/image.jpg');
-      expect(article.embeddedAuthorName, 'Jane Doe & John Smith');
+      expect(article.embeddedAuthorName, isNull);
     });
 
     test('Article.fromJson safely handles missing and null fields', () {
@@ -121,6 +122,25 @@ void main() {
       expect(result, contains('<p>'));
       expect(result, contains('€10'));
       expect(result, contains('&'));
+    });
+  });
+
+  group('WpApiService Author Tests', () {
+    test('Fallback author name is The College View', () {
+      expect(WpApiService.fallbackAuthorName, 'The College View');
+    });
+
+    test('fetchAuthorName with empty URL returns fallback author name', () async {
+      final author = await WpApiService.fetchAuthorName('');
+      expect(author, 'The College View');
+    });
+
+    test('Cached author name is returned when present', () async {
+      const url = 'https://thecollegeview.ie/cached-test-article';
+      WpApiService.cacheAuthorName(url, 'John Journalist');
+      expect(WpApiService.getCachedAuthorName(url), 'John Journalist');
+      final fetched = await WpApiService.fetchAuthorName(url);
+      expect(fetched, 'John Journalist');
     });
   });
 }

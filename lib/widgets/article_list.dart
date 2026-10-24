@@ -83,7 +83,7 @@ class _ArticleListState extends State<ArticleList> {
         itemCount: list.length,
         itemBuilder: (context, index) {
           final article = list[index];
-          return _ArticleCard(
+          return ArticleCard(
             key: ValueKey(article.id),
             article: article,
             categoryName: widget.categoryName,
@@ -182,7 +182,7 @@ class _ArticleListState extends State<ArticleList> {
           );
         }
         final article = articleProvider.articles[index];
-        return _ArticleCard(
+        return ArticleCard(
           key: ValueKey(article.id),
           article: article,
           categoryName: widget.categoryName,
@@ -192,32 +192,55 @@ class _ArticleListState extends State<ArticleList> {
   }
 }
 
-class _ArticleCard extends StatefulWidget {
+class ArticleCard extends StatefulWidget {
   final Article article;
   final String categoryName;
+  final EdgeInsetsGeometry? margin;
 
-  const _ArticleCard({
+  const ArticleCard({
     super.key,
     required this.article,
     required this.categoryName,
+    this.margin,
   });
 
   @override
-  State<_ArticleCard> createState() => _ArticleCardState();
+  State<ArticleCard> createState() => _ArticleCardState();
 }
 
-class _ArticleCardState extends State<_ArticleCard> {
+class _ArticleCardState extends State<ArticleCard>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late final Future<_CardDetails> _detailsFuture;
+  late _CardDetails _currentDetails;
 
   @override
   void initState() {
     super.initState();
+    final initialImageUrl = (widget.article.embeddedFeaturedMediaUrl != null &&
+            widget.article.embeddedFeaturedMediaUrl!.isNotEmpty)
+        ? widget.article.embeddedFeaturedMediaUrl!
+        : (WpApiService.getCachedFeaturedMediaUrl(widget.article.featuredMedia) ??
+            '');
+
+    final initialAuthorName =
+        WpApiService.getCachedAuthorName(widget.article.link) ??
+        widget.article.embeddedAuthorName ??
+        '';
+
+    _currentDetails = _CardDetails(
+      imageUrl: initialImageUrl,
+      authorName: initialAuthorName,
+    );
+
     _detailsFuture = _loadDetails();
   }
 
   Future<_CardDetails> _loadDetails() async {
-    String imageUrl = widget.article.embeddedFeaturedMediaUrl ?? '';
-    String authorName = widget.article.embeddedAuthorName ?? '';
+    String imageUrl = _currentDetails.imageUrl;
+    String authorName = _currentDetails.authorName;
 
     final futures = <Future<void>>[];
     if (imageUrl.isEmpty && widget.article.featuredMedia > 0) {
@@ -237,26 +260,29 @@ class _ArticleCardState extends State<_ArticleCard> {
       await Future.wait(futures);
     }
 
-    return _CardDetails(imageUrl: imageUrl, authorName: authorName);
+    final details = _CardDetails(imageUrl: imageUrl, authorName: authorName);
+    if (mounted) {
+      _currentDetails = details;
+    }
+    return details;
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final parsedDate = DateTime.tryParse(widget.article.date);
     final String formattedDate = parsedDate != null
         ? '⏰ ${DateFormat('MMMM d, y').format(parsedDate)}'
         : '';
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      margin: widget.margin ??
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       child: FutureBuilder<_CardDetails>(
         future: _detailsFuture,
+        initialData: _currentDetails,
         builder: (context, snapshot) {
-          final details = snapshot.data ??
-              _CardDetails(
-                imageUrl: widget.article.embeddedFeaturedMediaUrl ?? '',
-                authorName: widget.article.embeddedAuthorName ?? '',
-              );
+          final details = snapshot.data ?? _currentDetails;
 
           return InkWell(
             borderRadius: BorderRadius.circular(16),

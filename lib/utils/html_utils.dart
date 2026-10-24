@@ -24,7 +24,12 @@ class HtmlUtils {
     // Parse the HTML string and extract the text content
     // This automatically decodes all HTML entities
     final document = html_parser.parse(htmlString);
-    return document.body?.text ?? htmlString;
+    final text = document.body?.text ?? htmlString;
+    return text
+        .replaceAll('‘', "'")
+        .replaceAll('’', "'")
+        .replaceAll('“', '"')
+        .replaceAll('”', '"');
   }
 
   /// Decodes HTML entities and strips HTML tags
@@ -34,7 +39,12 @@ class HtmlUtils {
     if (htmlString.isEmpty) return htmlString;
 
     final document = html_parser.parse(htmlString);
-    return document.body?.text ?? htmlString;
+    final text = document.body?.text ?? htmlString;
+    return text
+        .replaceAll('‘', "'")
+        .replaceAll('’', "'")
+        .replaceAll('“', '"')
+        .replaceAll('”', '"');
   }
 
   /// Decodes HTML entities but preserves HTML structure
@@ -65,6 +75,7 @@ class HtmlUtils {
         .replaceAll('&#8242;', "'") // prime
         .replaceAll('&#8243;', '"') // double prime
         .replaceAll('&#8364;', '€') // euro sign
+        .replaceAll('&euro;', '€')
         .replaceAll('&#8482;', '™') // trademark sign
         .replaceAll('&#169;', '©') // copyright sign
         .replaceAll('&#174;', '®') // registered sign

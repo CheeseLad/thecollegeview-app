@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/wp_api_service.dart';
 import '../widgets/network_image_with_fallback.dart';
+import '../widgets/article_list.dart';
 import 'tag_articles_screen.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
@@ -47,7 +48,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   }
 
   Future<String> _resolveAuthorName() async {
-    final cached = widget.authorName ?? widget.article.embeddedAuthorName;
+    final cached = widget.authorName ??
+        WpApiService.getCachedAuthorName(widget.article.link) ??
+        widget.article.embeddedAuthorName;
     if (cached != null && cached.isNotEmpty) {
       return cached;
     }
@@ -56,8 +59,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   }
 
   Future<String> _resolveFeaturedMediaUrl() async {
-    final cached =
-        widget.featuredMediaUrl ?? widget.article.embeddedFeaturedMediaUrl;
+    final cached = widget.featuredMediaUrl ??
+        widget.article.embeddedFeaturedMediaUrl ??
+        WpApiService.getCachedFeaturedMediaUrl(widget.article.featuredMedia);
     if (cached != null && cached.isNotEmpty) {
       return cached;
     }
@@ -143,9 +147,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
           ),
         ],
       ),
-      body: Container(
-        color: Theme.of(context).colorScheme.surface,
-        child: Padding(
+      body: Padding(
           padding: const EdgeInsets.all(15.0),
           child: SingleChildScrollView(
             child: SelectionArea(
@@ -174,7 +176,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                         builder: (context, snapshot) {
                           final author = snapshot.data ??
                               widget.authorName ??
-                              widget.article.embeddedAuthorName ??
+                              WpApiService.getCachedAuthorName(widget.article.link) ??
                               '';
                           if (author.isEmpty) {
                             if (snapshot.connectionState ==
@@ -185,7 +187,15 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               );
                             }
-                            return const SizedBox.shrink();
+                            return Text(
+                              '👤 ${WpApiService.fallbackAuthorName}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                            );
                           }
                           return Text(
                             '👤 $author',
@@ -455,7 +465,6 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 }
@@ -511,160 +520,15 @@ class _RelatedArticlesSectionState extends State<_RelatedArticlesSection> {
               ),
             ),
             const SizedBox(height: 10),
-            ...related.map((relatedArticle) => _RelatedArticleCard(
+            ...related.map((relatedArticle) => ArticleCard(
+                  key: ValueKey(relatedArticle.id),
                   article: relatedArticle,
                   categoryName: widget.categoryName,
+                  margin: const EdgeInsets.only(bottom: 10),
                 ))
           ],
         );
       },
     );
   }
-}
-
-class _RelatedArticleCard extends StatefulWidget {
-  final Article article;
-  final String categoryName;
-
-  const _RelatedArticleCard({
-    required this.article,
-    required this.categoryName,
-  });
-
-  @override
-  State<_RelatedArticleCard> createState() => _RelatedArticleCardState();
-}
-
-class _RelatedArticleCardState extends State<_RelatedArticleCard> {
-  late final Future<_CardDetails> _detailsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _detailsFuture = _loadDetails();
-  }
-
-  Future<_CardDetails> _loadDetails() async {
-    String imageUrl = widget.article.embeddedFeaturedMediaUrl ?? '';
-    String authorName = widget.article.embeddedAuthorName ?? '';
-
-    final futures = <Future<void>>[];
-    if (imageUrl.isEmpty && widget.article.featuredMedia > 0) {
-      futures.add(
-        WpApiService.fetchFeaturedMediaUrl(widget.article.featuredMedia)
-            .then((url) => imageUrl = url),
-      );
-    }
-    if (authorName.isEmpty) {
-      futures.add(
-        WpApiService.fetchAuthorName(widget.article.link, widget.article.author)
-            .then((name) => authorName = name),
-      );
-    }
-
-    if (futures.isNotEmpty) {
-      await Future.wait(futures);
-    }
-    return _CardDetails(imageUrl: imageUrl, authorName: authorName);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final parsedDate = DateTime.tryParse(widget.article.date);
-    final String formattedDate = parsedDate != null
-        ? '⏰ ${DateFormat('MMMM d, y').format(parsedDate)}'
-        : '';
-
-    return FutureBuilder<_CardDetails>(
-      future: _detailsFuture,
-      builder: (context, snapshot) {
-        final details = snapshot.data ??
-            _CardDetails(
-              imageUrl: widget.article.embeddedFeaturedMediaUrl ?? '',
-              authorName: widget.article.embeddedAuthorName ?? '',
-            );
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ArticleDetailScreen(
-                  article: widget.article,
-                  categoryName: widget.categoryName,
-                  featuredMediaUrl: details.imageUrl,
-                  authorName: details.authorName,
-                ),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  NetworkImageWithFallback(
-                    imageUrl: details.imageUrl,
-                    fallbackAssetPath: 'assets/logo.png',
-                    width: 110,
-                    height: 110,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.article.title,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        if (formattedDate.isNotEmpty)
-                          Text(
-                            formattedDate,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                        if (details.authorName.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            '👤 ${details.authorName}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _CardDetails {
-  final String imageUrl;
-  final String authorName;
-  const _CardDetails({required this.imageUrl, required this.authorName});
 }
