@@ -85,7 +85,8 @@ void main() {
       expect(reconstructed.id, 55);
       expect(reconstructed.title, 'Saved Title');
       expect(reconstructed.categoryName, 'News');
-      expect(reconstructed.featuredMediaUrl, 'https://thecollegeview.ie/img.png');
+      expect(
+          reconstructed.featuredMediaUrl, 'https://thecollegeview.ie/img.png');
       expect(reconstructed.authorName, 'Author Name');
       expect(reconstructed.tags, [10, 20]);
       expect(reconstructed.tagNames, ['News', 'Campus']);
@@ -130,7 +131,8 @@ void main() {
       expect(WpApiService.fallbackAuthorName, 'The College View');
     });
 
-    test('fetchAuthorName with empty URL returns fallback author name', () async {
+    test('fetchAuthorName with empty URL returns fallback author name',
+        () async {
       final author = await WpApiService.fetchAuthorName('');
       expect(author, 'The College View');
     });
@@ -144,4 +146,3 @@ void main() {
     });
   });
 }
-

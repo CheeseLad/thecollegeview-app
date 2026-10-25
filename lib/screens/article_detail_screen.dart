@@ -148,57 +148,47 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         ],
       ),
       body: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: SingleChildScrollView(
-            child: SelectionArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.article.title,
-                    style: const TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (formattedDate.isNotEmpty)
-                        Text(formattedDate,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            )),
-                      FutureBuilder<String>(
-                        future: _authorNameFuture,
-                        builder: (context, snapshot) {
-                          final author = snapshot.data ??
-                              widget.authorName ??
-                              WpApiService.getCachedAuthorName(widget.article.link) ??
-                              '';
-                          if (author.isEmpty) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              );
-                            }
-                            return Text(
-                              '👤 ${WpApiService.fallbackAuthorName}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
+        padding: const EdgeInsets.all(15.0),
+        child: SingleChildScrollView(
+          child: SelectionArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.article.title,
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (formattedDate.isNotEmpty)
+                      Text(formattedDate,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          )),
+                    FutureBuilder<String>(
+                      future: _authorNameFuture,
+                      builder: (context, snapshot) {
+                        final author = snapshot.data ??
+                            widget.authorName ??
+                            WpApiService.getCachedAuthorName(
+                                widget.article.link) ??
+                            '';
+                        if (author.isEmpty) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             );
                           }
                           return Text(
-                            '👤 $author',
+                            '👤 ${WpApiService.fallbackAuthorName}',
                             style: TextStyle(
                               fontSize: 16,
                               color: Theme.of(context)
@@ -206,265 +196,269 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                   .onSurfaceVariant,
                             ),
                           );
-                        },
+                        }
+                        return Text(
+                          '👤 $author',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        );
+                      },
+                    ),
+                    Text(
+                      '📂 ${widget.categoryName}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
+                    ),
+                  ],
+                ),
+                // Show tag on a new line if viewing tagged articles
+                if (widget.categoryName.startsWith('Tag: ')) ...[
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      const Text('🏷️ '),
                       Text(
-                        '📂 ${widget.categoryName}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                        () {
+                          final tagName = widget.categoryName.substring(5);
+                          return tagName.isEmpty
+                              ? tagName
+                              : tagName[0].toUpperCase() + tagName.substring(1);
+                        }(),
                       ),
                     ],
                   ),
-                  // Show tag on a new line if viewing tagged articles
-                  if (widget.categoryName.startsWith('Tag: ')) ...[
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        const Text('🏷️ '),
-                        Text(
-                          () {
-                            final tagName = widget.categoryName.substring(5);
-                            return tagName.isEmpty
-                                ? tagName
-                                : tagName[0].toUpperCase() +
-                                    tagName.substring(1);
-                          }(),
-                        ),
-                      ],
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                  // Display featured media if available
-                  if (widget.article.featuredMedia > 0 ||
-                      (widget.article.embeddedFeaturedMediaUrl != null &&
-                          widget.article.embeddedFeaturedMediaUrl!.isNotEmpty))
-                    FutureBuilder<String>(
-                      future: _featuredMediaUrlFuture,
-                      builder: (context, snapshot) {
-                        final mediaUrl = snapshot.data ??
-                            widget.featuredMediaUrl ??
-                            widget.article.embeddedFeaturedMediaUrl ??
-                            '';
-                        if (mediaUrl.isNotEmpty) {
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 20),
-                            child: NetworkImageWithFallback(
-                              imageUrl: mediaUrl,
-                              fallbackAssetPath: 'assets/logo.png',
-                              width: double.infinity,
-                              height: 220,
-                              fit: BoxFit.cover,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          );
-                        } else if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return Container(
-                            width: double.infinity,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                  HtmlWidget(
-                    widget.article.content,
-                    renderMode: RenderMode.column,
-                    textStyle: const TextStyle(fontSize: 16),
-                    onTapUrl: (url) async {
-                      final uri = Uri.tryParse(url);
-                      if (uri != null && await canLaunchUrl(uri)) {
-                        await launchUrl(uri,
-                            mode: LaunchMode.externalApplication);
-                        return true;
-                      }
-                      return false;
-                    },
-                    customStylesBuilder: (element) {
-                      if (element.localName == 'img') {
-                        return {
-                          'border-radius': '10px',
-                        };
-                      }
-                      return null;
-                    },
-                    customWidgetBuilder: (element) {
-                      if (element.localName == 'img') {
-                        final src = element.attributes['src'];
-                        if (src != null && src.isNotEmpty) {
-                          return NetworkImageWithFallback(
-                            imageUrl: src,
+                ],
+                const SizedBox(height: 10),
+                // Display featured media if available
+                if (widget.article.featuredMedia > 0 ||
+                    (widget.article.embeddedFeaturedMediaUrl != null &&
+                        widget.article.embeddedFeaturedMediaUrl!.isNotEmpty))
+                  FutureBuilder<String>(
+                    future: _featuredMediaUrlFuture,
+                    builder: (context, snapshot) {
+                      final mediaUrl = snapshot.data ??
+                          widget.featuredMediaUrl ??
+                          widget.article.embeddedFeaturedMediaUrl ??
+                          '';
+                      if (mediaUrl.isNotEmpty) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          child: NetworkImageWithFallback(
+                            imageUrl: mediaUrl,
                             fallbackAssetPath: 'assets/logo.png',
+                            width: double.infinity,
+                            height: 220,
+                            fit: BoxFit.cover,
                             borderRadius: BorderRadius.circular(10),
-                          );
-                        }
+                          ),
+                        );
+                      } else if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return Container(
+                          width: double.infinity,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
                       }
-                      return null;
+                      return const SizedBox.shrink();
                     },
                   ),
-                  const SizedBox(height: 10),
-                  // Display tags if available
-                  if (widget.article.tags.isNotEmpty) ...[
-                    FutureBuilder<List<String>>(
-                      future: _tagNamesFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const SizedBox.shrink();
-                        } else if (snapshot.hasData &&
-                            snapshot.data!.isNotEmpty) {
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                //const Text(
-                                //  'Tags:',
-                                //  style: TextStyle(
-                                //    fontSize: 16,
-                                //    fontWeight: FontWeight.bold,
-                                //    color: Colors.grey,
-                                //  ),
-                                //),
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  spacing: 8.0,
-                                  runSpacing: 4.0,
-                                  children: snapshot.data!
-                                      .asMap()
-                                      .entries
-                                      .map((entry) {
-                                    final index = entry.key;
-                                    final tagName = entry.value;
-                                    final tagId = widget.article.tags[index];
+                HtmlWidget(
+                  widget.article.content,
+                  renderMode: RenderMode.column,
+                  textStyle: const TextStyle(fontSize: 16),
+                  onTapUrl: (url) async {
+                    final uri = Uri.tryParse(url);
+                    if (uri != null && await canLaunchUrl(uri)) {
+                      await launchUrl(uri,
+                          mode: LaunchMode.externalApplication);
+                      return true;
+                    }
+                    return false;
+                  },
+                  customStylesBuilder: (element) {
+                    if (element.localName == 'img') {
+                      return {
+                        'border-radius': '10px',
+                      };
+                    }
+                    return null;
+                  },
+                  customWidgetBuilder: (element) {
+                    if (element.localName == 'img') {
+                      final src = element.attributes['src'];
+                      if (src != null && src.isNotEmpty) {
+                        return NetworkImageWithFallback(
+                          imageUrl: src,
+                          fallbackAssetPath: 'assets/logo.png',
+                          borderRadius: BorderRadius.circular(10),
+                        );
+                      }
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 10),
+                // Display tags if available
+                if (widget.article.tags.isNotEmpty) ...[
+                  FutureBuilder<List<String>>(
+                    future: _tagNamesFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox.shrink();
+                      } else if (snapshot.hasData &&
+                          snapshot.data!.isNotEmpty) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              //const Text(
+                              //  'Tags:',
+                              //  style: TextStyle(
+                              //    fontSize: 16,
+                              //    fontWeight: FontWeight.bold,
+                              //    color: Colors.grey,
+                              //  ),
+                              //),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8.0,
+                                runSpacing: 4.0,
+                                children:
+                                    snapshot.data!.asMap().entries.map((entry) {
+                                  final index = entry.key;
+                                  final tagName = entry.value;
+                                  final tagId = widget.article.tags[index];
 
-                                    return GestureDetector(
-                                      onTap: () async {
-                                        // Create a Tag object for navigation
-                                        final tag = Tag(
-                                          id: tagId,
-                                          name: tagName,
-                                          slug: tagName
-                                              .toLowerCase()
-                                              .replaceAll(' ', '-'),
-                                          description: '',
-                                          count: 0,
-                                        );
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      // Create a Tag object for navigation
+                                      final tag = Tag(
+                                        id: tagId,
+                                        name: tagName,
+                                        slug: tagName
+                                            .toLowerCase()
+                                            .replaceAll(' ', '-'),
+                                        description: '',
+                                        count: 0,
+                                      );
 
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                TagArticlesScreen(tag: tag),
-                                          ),
-                                        );
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              TagArticlesScreen(tag: tag),
                                         ),
-                                        decoration: BoxDecoration(
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primaryContainer,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
                                           color: Theme.of(context)
                                               .colorScheme
-                                              .primaryContainer,
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          border: Border.all(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            width: 1,
-                                          ),
+                                              .primary,
+                                          width: 1,
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              tagName,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onPrimaryContainer,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Icon(
-                                              Icons.arrow_forward_ios,
-                                              size: 12,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            tagName,
+                                            style: TextStyle(
+                                              fontSize: 14,
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onPrimaryContainer,
+                                              fontWeight: FontWeight.w500,
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Icon(
+                                            Icons.arrow_forward_ios,
+                                            size: 12,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimaryContainer,
+                                          ),
+                                        ],
                                       ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ],
-                            ),
-                          );
-                        } else {
-                          return const SizedBox.shrink();
-                        }
-                      },
-                    ),
-                  ] else ...[
-                    const SizedBox.shrink(),
-                  ],
-                  InkWell(
-                    key: _shareButtonKey,
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: _shareArticle,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Theme.of(context).colorScheme.outline,
-                            width: 1.0),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.share),
-                          SizedBox(width: 8.0),
-                          Text(
-                            "Share",
-                            style: TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.w600,
-                            ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    },
+                  ),
+                ] else ...[
+                  const SizedBox.shrink(),
+                ],
+                InkWell(
+                  key: _shareButtonKey,
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: _shareArticle,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                          color: Theme.of(context).colorScheme.outline,
+                          width: 1.0),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.share),
+                        SizedBox(width: 8.0),
+                        Text(
+                          "Share",
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  _RelatedArticlesSection(
-                    article: widget.article,
-                    categoryName: widget.categoryName,
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                _RelatedArticlesSection(
+                  article: widget.article,
+                  categoryName: widget.categoryName,
+                ),
+              ],
             ),
           ),
         ),
+      ),
     );
   }
 }

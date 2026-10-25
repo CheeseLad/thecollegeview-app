@@ -102,7 +102,8 @@ class PageContentProvider with ChangeNotifier {
 
         <a href="${AppUrls.website}/the-college-view-mobile-app-privacy-policy" target="_blank">${AppConfig.instance.appName} Mobile App Privacy Policy</a>
       ''',
-      excerpt: 'About ${AppConfig.instance.appName} - ${AppConfig.instance.appDescription}',
+      excerpt:
+          'About ${AppConfig.instance.appName} - ${AppConfig.instance.appDescription}',
       link: '${AppUrls.apiBase}/about/',
       slug: 'about',
     );

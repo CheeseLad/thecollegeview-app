@@ -97,20 +97,18 @@ class SavedArticle extends HiveObject {
       content: map['content']?.toString() ?? '',
       link: map['link']?.toString() ?? '',
       author: int.tryParse(map['author']?.toString() ?? '0') ?? 0,
-      featuredMedia:
-          int.tryParse(map['featuredMedia']?.toString() ?? '0') ?? 0,
+      featuredMedia: int.tryParse(map['featuredMedia']?.toString() ?? '0') ?? 0,
       categoryName: map['categoryName']?.toString() ?? 'All Articles',
-      savedAt: DateTime.tryParse(map['savedAt']?.toString() ?? '') ??
-          DateTime.now(),
+      savedAt:
+          DateTime.tryParse(map['savedAt']?.toString() ?? '') ?? DateTime.now(),
       tags: (map['tags'] as List? ?? [])
           .map((t) => int.tryParse(t.toString()) ?? 0)
           .where((t) => t > 0)
           .toList(),
       featuredMediaUrl: map['featuredMediaUrl']?.toString() ?? '',
       authorName: map['authorName']?.toString() ?? '',
-      tagNames: (map['tagNames'] as List? ?? [])
-          .map((t) => t.toString())
-          .toList(),
+      tagNames:
+          (map['tagNames'] as List? ?? []).map((t) => t.toString()).toList(),
     );
   }
 }

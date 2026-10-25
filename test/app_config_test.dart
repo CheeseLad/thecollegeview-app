@@ -21,8 +21,8 @@ void main() {
       expect(config.website, 'https://thecollegeview.ie');
       expect(config.websiteDomain, 'thecollegeview.ie');
       expect(config.instagramUrl, 'https://instagram.com/thecollegeview');
-      expect(
-          config.whatsappUrl, 'https://chat.whatsapp.com/C8Rwkvo7h7k4STz79ICfHV');
+      expect(config.whatsappUrl,
+          'https://chat.whatsapp.com/C8Rwkvo7h7k4STz79ICfHV');
       expect(config.imageProxyUrl, 'https://images.weserv.nl/?url=');
     });
 
@@ -56,7 +56,8 @@ void main() {
       expect(config.imageProxyUrl, 'https://images.custom.org/?url=');
     });
 
-    test('AppConfig.fromJson parses flat JSON structure and derives domain', () {
+    test('AppConfig.fromJson parses flat JSON structure and derives domain',
+        () {
       final json = {
         'name': 'Alt Paper',
         'apiBase': 'https://api.example.com',

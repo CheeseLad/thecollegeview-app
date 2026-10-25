@@ -107,7 +107,9 @@ class _SavedArticleCardState extends State<_SavedArticleCard>
     super.initState();
     final initialImageUrl = widget.savedArticle.featuredMediaUrl.isNotEmpty
         ? widget.savedArticle.featuredMediaUrl
-        : (WpApiService.getCachedFeaturedMediaUrl(widget.savedArticle.featuredMedia) ?? '');
+        : (WpApiService.getCachedFeaturedMediaUrl(
+                widget.savedArticle.featuredMedia) ??
+            '');
 
     final initialAuthorName = widget.savedArticle.authorName.isNotEmpty
         ? widget.savedArticle.authorName
@@ -136,7 +138,8 @@ class _SavedArticleCardState extends State<_SavedArticleCard>
           savedArticle.link, savedArticle.author);
     }
 
-    final details = _SavedCardDetails(imageUrl: imageUrl, authorName: authorName);
+    final details =
+        _SavedCardDetails(imageUrl: imageUrl, authorName: authorName);
     if (mounted) {
       _currentDetails = details;
     }

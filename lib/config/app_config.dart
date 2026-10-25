@@ -15,8 +15,7 @@ class AppConfig {
       'https://instagram.com/thecollegeview';
   static const String defaultWhatsappUrl =
       'https://chat.whatsapp.com/C8Rwkvo7h7k4STz79ICfHV';
-  static const String defaultImageProxyUrl =
-      'https://images.weserv.nl/?url=';
+  static const String defaultImageProxyUrl = 'https://images.weserv.nl/?url=';
 
   final String appName;
   final String appDescription;
@@ -155,4 +154,3 @@ class AppConfig {
     return _instance;
   }
 }
-

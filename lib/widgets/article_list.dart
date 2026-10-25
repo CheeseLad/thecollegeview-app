@@ -222,13 +222,14 @@ class _ArticleCardState extends State<ArticleCard>
     final initialImageUrl = (widget.article.embeddedFeaturedMediaUrl != null &&
             widget.article.embeddedFeaturedMediaUrl!.isNotEmpty)
         ? widget.article.embeddedFeaturedMediaUrl!
-        : (WpApiService.getCachedFeaturedMediaUrl(widget.article.featuredMedia) ??
+        : (WpApiService.getCachedFeaturedMediaUrl(
+                widget.article.featuredMedia) ??
             '');
 
     final initialAuthorName =
         WpApiService.getCachedAuthorName(widget.article.link) ??
-        widget.article.embeddedAuthorName ??
-        '';
+            widget.article.embeddedAuthorName ??
+            '';
 
     _currentDetails = _CardDetails(
       imageUrl: initialImageUrl,
