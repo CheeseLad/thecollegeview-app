@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'config/app_config.dart';
 import 'theme/app_theme.dart';
 import 'services/cache_service.dart';
 import 'providers/article_provider.dart';
@@ -11,6 +12,8 @@ import 'screens/article_detail_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await AppConfig.load();
 
   await Hive.initFlutter();
   await CacheService().init();
@@ -50,7 +53,7 @@ class MyApp extends StatelessWidget {
         builder: (context, themeProvider, child) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            title: 'The College View',
+            title: AppConfig.instance.appName,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,

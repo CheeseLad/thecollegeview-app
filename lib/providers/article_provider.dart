@@ -40,7 +40,7 @@ class ArticleProvider with ChangeNotifier {
     try {
       final config = await CategoryConfig.load();
 
-      const url = '${AppUrls.apiBase}/wp-json/wp/v2/categories'
+      final url = '${AppUrls.apiBase}/wp-json/wp/v2/categories'
           '?per_page=100'
           '&_fields=id,name,slug,parent,count';
 
@@ -97,7 +97,7 @@ class ArticleProvider with ChangeNotifier {
   }
 
   Future<void> fetchStickyArticles() async {
-    const url =
+    final url =
         '${AppUrls.apiBase}/wp-json/wp/v2/posts?sticky=true&_fields=id,date,title,content,link,author,featured_media,tags';
     try {
       final response = await WpApiService.get(Uri.parse(url));
@@ -214,7 +214,7 @@ class ArticleProvider with ChangeNotifier {
   }
 
   Future<void> fetchTags() async {
-    const url = '${AppUrls.apiBase}/wp-json/wp/v2/tags?per_page=100';
+    final url = '${AppUrls.apiBase}/wp-json/wp/v2/tags?per_page=100';
     try {
       final response = await WpApiService.get(Uri.parse(url));
       if (response.statusCode == 200) {

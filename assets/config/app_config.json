@@ -1,0 +1,15 @@
+{
+  "appName": "The College View",
+  "appDescription": "The College View - DCU's Independent Student Newspaper",
+  "fallbackAuthorName": "The College View",
+  "copyrightNotice": "© The College View 1999-2026 - Maintained by Jake Farrell",
+  "urls": {
+    "apiBase": "https://tcvappapi.jakefarrell.ie",
+    "website": "https://thecollegeview.ie",
+    "websiteDomain": "thecollegeview.ie",
+    "instagram": "https://instagram.com/thecollegeview",
+    "whatsapp": "https://chat.whatsapp.com/C8Rwkvo7h7k4STz79ICfHV",
+    "imageProxy": "https://images.weserv.nl/?url="
+  }
+}
+

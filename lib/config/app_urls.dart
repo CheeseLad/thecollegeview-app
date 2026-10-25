@@ -1,5 +1,9 @@
+import 'app_config.dart';
+
 class AppUrls {
-  static const String apiBase = 'https://tcvappapi.jakefarrell.ie';
-  static const String website = 'https://thecollegeview.ie';
-  static const String websiteDomain = 'thecollegeview.ie';
+  static String get apiBase => AppConfig.instance.apiBase;
+  static String get website => AppConfig.instance.website;
+  static String get websiteDomain => AppConfig.instance.websiteDomain;
+  static String get instagram => AppConfig.instance.instagramUrl;
+  static String get whatsapp => AppConfig.instance.whatsappUrl;
 }

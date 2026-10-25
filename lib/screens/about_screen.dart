@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../config/app_config.dart';
 import '../providers/page_content_provider.dart';
 import '../widgets/cv_navigation_drawer.dart';
 
@@ -108,9 +109,9 @@ class _AboutScreenState extends State<AboutScreen> {
                             },
                           ),
                           const SizedBox(height: 30),
-                          const Text(
-                            '© The College View 1999-2026 - Maintained by Jake Farrell',
-                            style: TextStyle(
+                          Text(
+                            AppConfig.instance.copyrightNotice,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontStyle: FontStyle.italic,
                             ),

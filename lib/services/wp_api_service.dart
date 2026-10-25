@@ -1,13 +1,14 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../config/app_config.dart';
 import '../config/app_urls.dart';
 import '../utils/html_utils.dart';
 import 'cache_service.dart';
 
 class WpApiService {
-  static const String fallbackAuthorName = 'The College View';
-  static const String _authorInfoEndpoint = '${AppUrls.apiBase}/get-subheading';
+  static String get fallbackAuthorName => AppConfig.instance.fallbackAuthorName;
+  static String get _authorInfoEndpoint => '${AppUrls.apiBase}/get-subheading';
 
   static final CacheService _cache = CacheService();
 

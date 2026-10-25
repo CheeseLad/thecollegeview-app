@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/page_content.dart';
 import '../services/wp_api_service.dart';
+import '../config/app_config.dart';
 import '../config/app_urls.dart';
 
 class PageContentProvider with ChangeNotifier {
@@ -99,9 +100,9 @@ class PageContentProvider with ChangeNotifier {
         
         <p>The College View welcomes criticism and opposing viewpoints through constructive and rational debate and wishes to create an atmosphere which encourages an open dialogue.</p>
 
-        <a href="https://thecollegeview.ie/the-college-view-mobile-app-privacy-policy" target="_blank">The College View Mobile App Privacy Policy</a>
+        <a href="${AppUrls.website}/the-college-view-mobile-app-privacy-policy" target="_blank">${AppConfig.instance.appName} Mobile App Privacy Policy</a>
       ''',
-      excerpt: 'About The College View - DCU\'s Independent Student Newspaper',
+      excerpt: 'About ${AppConfig.instance.appName} - ${AppConfig.instance.appDescription}',
       link: '${AppUrls.apiBase}/about/',
       slug: 'about',
     );

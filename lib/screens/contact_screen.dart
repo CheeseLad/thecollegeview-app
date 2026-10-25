@@ -264,6 +264,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
     if (mounted) {
       await Clipboard.setData(ClipboardData(text: cleanEmail));
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Email copied to clipboard: $cleanEmail'),

@@ -113,21 +113,21 @@ class CVNavigationDrawer extends StatelessWidget {
           ),
 
           // Always stays at the bottom
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 15),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 15),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SocialMediaIcon(
                   icon: FontAwesomeIcons.instagram,
-                  url: 'https://instagram.com/thecollegeview',
+                  url: AppUrls.instagram,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 SocialMediaIcon(
                   icon: FontAwesomeIcons.whatsapp,
-                  url: 'https://chat.whatsapp.com/C8Rwkvo7h7k4STz79ICfHV',
+                  url: AppUrls.whatsapp,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 SocialMediaIcon(
                   icon: FontAwesomeIcons.globe,
                   url: AppUrls.website,

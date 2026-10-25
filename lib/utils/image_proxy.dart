@@ -1,5 +1,7 @@
+import '../config/app_config.dart';
+
 class ImageProxy {
-  static const String _proxyUrl = 'https://images.weserv.nl/?url=';
+  static String get _proxyUrl => AppConfig.instance.imageProxyUrl;
 
   static String getProxiedImageUrl(String originalUrl) {
     if (originalUrl.isEmpty) return originalUrl;
