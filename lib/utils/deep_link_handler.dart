@@ -73,7 +73,11 @@ class DeepLinkHandler {
     BuildContext? context,
     bool showErrorSnackBar = false,
   }) async {
-    final uri = Uri.tryParse(rawUrl.trim());
+    var normalizedUrl = rawUrl.trim();
+    if (normalizedUrl.startsWith('http://')) {
+      normalizedUrl = 'https://${normalizedUrl.substring(7)}';
+    }
+    final uri = Uri.tryParse(normalizedUrl);
     if (uri != null) {
       try {
         if (await canLaunchUrl(uri)) {

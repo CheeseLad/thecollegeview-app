@@ -25,6 +25,14 @@ class NetworkImageWithFallback extends StatelessWidget {
     this.borderRadius,
   });
 
+  static String _normalizeImageUrl(String rawUrl) {
+    final trimmed = rawUrl.trim();
+    if (trimmed.startsWith('http://')) {
+      return 'https://${trimmed.substring(7)}';
+    }
+    return trimmed;
+  }
+
   static String _proxiedImageUrl(String originalUrl) {
     if (originalUrl.isEmpty || originalUrl.contains('weserv.nl')) {
       return originalUrl;
@@ -43,7 +51,7 @@ class NetworkImageWithFallback extends StatelessWidget {
     double? height,
     BoxFit fit = BoxFit.cover,
   }) {
-    final trimmedUrl = imageUrl.trim();
+    final trimmedUrl = _normalizeImageUrl(imageUrl);
     if (trimmedUrl.isEmpty) return true;
     final targetCacheWidth = resolveTargetCacheWidth(
       context,
@@ -63,7 +71,7 @@ class NetworkImageWithFallback extends StatelessWidget {
     double? height,
     BoxFit fit = BoxFit.cover,
   }) async {
-    final trimmedUrl = imageUrl.trim();
+    final trimmedUrl = _normalizeImageUrl(imageUrl);
     if (trimmedUrl.isEmpty) return;
 
     final effectiveUrl = kIsWeb ? _proxiedImageUrl(trimmedUrl) : trimmedUrl;
@@ -193,7 +201,7 @@ class NetworkImageWithFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final trimmedUrl = imageUrl.trim();
+    final trimmedUrl = _normalizeImageUrl(imageUrl);
 
     if (trimmedUrl.isEmpty || (kIsWeb && AppConfig.instance.forceOfflineMode)) {
       Widget fallback = _buildFallback(context);

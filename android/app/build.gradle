@@ -38,10 +38,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "ie.thecollegeview.app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
@@ -50,19 +47,52 @@ android {
 
     signingConfigs {
         release {
-            if (localProperties.containsKey('MYAPP_RELEASE_STORE_FILE')) {
-                storeFile file(localProperties['MYAPP_RELEASE_STORE_FILE'])
-                storePassword localProperties['MYAPP_RELEASE_STORE_PASSWORD']
-                keyAlias localProperties['MYAPP_RELEASE_KEY_ALIAS']
-                keyPassword localProperties['MYAPP_RELEASE_KEY_PASSWORD']
+            def keystorePropertiesFile = rootProject.file("key.properties")
+            def keystoreProperties = new Properties()
+            if (keystorePropertiesFile.exists()) {
+                keystorePropertiesFile.withReader("UTF-8") { reader ->
+                    keystoreProperties.load(reader)
+                }
+            }
+
+            def resolvedStoreFile = keystoreProperties.getProperty("storeFile")
+                ?: localProperties.getProperty("MYAPP_RELEASE_STORE_FILE")
+                ?: System.getenv("ANDROID_KEYSTORE_PATH")
+            def resolvedStorePassword = keystoreProperties.getProperty("storePassword")
+                ?: localProperties.getProperty("MYAPP_RELEASE_STORE_PASSWORD")
+                ?: System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            def resolvedKeyAlias = keystoreProperties.getProperty("keyAlias")
+                ?: localProperties.getProperty("MYAPP_RELEASE_KEY_ALIAS")
+                ?: System.getenv("ANDROID_KEY_ALIAS")
+            def resolvedKeyPassword = keystoreProperties.getProperty("keyPassword")
+                ?: localProperties.getProperty("MYAPP_RELEASE_KEY_PASSWORD")
+                ?: System.getenv("ANDROID_KEY_PASSWORD")
+
+            if (resolvedStoreFile) {
+                storeFile file(resolvedStoreFile)
+                storePassword resolvedStorePassword
+                keyAlias resolvedKeyAlias
+                keyPassword resolvedKeyPassword
             }
         }
     }
 
     buildTypes {
         release {
-            if (localProperties.containsKey('MYAPP_RELEASE_STORE_FILE')) {
+            if (signingConfigs.release.storeFile != null) {
                 signingConfig signingConfigs.release
+            } else {
+                def isBundleRelease = gradle.startParameter.taskNames.any {
+                    it.toLowerCase().contains("bundlerelease")
+                }
+                if (isBundleRelease) {
+                    throw new GradleException(
+                        "Release keystore not configured for Play Store App Bundle (.aab). " +
+                        "Copy android/key.properties.example to android/key.properties and fill in your upload keystore details."
+                    )
+                }
+                // Allow local `flutter run --release` / `flutter build apk --release` testing using debug signing
+                signingConfig signingConfigs.debug
             }
 
             minifyEnabled false
