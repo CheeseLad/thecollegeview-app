@@ -1,16 +1,25 @@
 # The College View App
 
-Developing an iOS & Android app for The College View - DCU's independent student newspaper using Flutter and the WordPress REST API. The app allows users to view articles and categories, submit their own articles and search for articles, the app is planned to be released on both the Apple App Store and the Google Play Store.
+The official mobile app for **[The College View](https://thecollegeview.ie)** - Dublin City University's independent student newspaper. Read the latest student journalism, campus news, sports, opinions, lifestyle, and arts coverage on iOS and Android.
 
-## Technologies Used:
+## Web Preview: [tcvapp.jakefarrell.ie](https://tcvapp.jakefarrell.ie/)
+
+![](https://www.jakefarrell.ie/tcvapp.webp)
+
+## Features
+
+- **Latest Stories & Sections:** Browse breaking campus news and explore all nine newspaper sections - *News*, *Opinions*, *Features*, *Irish*, *Sports*, *Lifestyle*, *Satire*, *Science and Tech*, and *The Hype*.
+- **Save Articles for Later:** Bookmark stories to read anytime, even when you're offline.
+- **Customisable Reading Experience:** Adjust article text size to your preference, zoom into article photos in full screen, and switch between Light, Dark, or System themes.
+- **Fast Search & Topic Tags:** Search across the archive by keyword or tap article tags to discover related coverage.
+- **Share & Connect:** Easily share stories with friends, open *The College View* links directly in the app, and get in touch with section editors via the Contact page.
+
+## Technologies Used
+
 - Flutter
 - WordPress REST API
 - Dart
 
 ## Running on Web
 
-Launch the app with `flutter run -d chrome`.
-
-## Preview: [tcvapp.jakefarrell.ie](https://tcvapp.jakefarrell.ie/)
-
-![](https://www.jakefarrell.ie/tcvapp.webp)
+Launch the app with `flutter run -d chrome`
