@@ -238,10 +238,7 @@ class _ArticleCardState extends State<ArticleCard>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final parsedDate = DateTime.tryParse(widget.article.date);
-    final String formattedDate = parsedDate != null
-        ? '⏰ ${DateFormat('MMMM d, y').format(parsedDate)}'
-        : '';
+    final formattedDate = widget.article.formattedDate;
     final String? savedDate = widget.savedAt != null
         ? '💾 Saved ${DateFormat('MMM d, y').format(widget.savedAt!)}'
         : null;

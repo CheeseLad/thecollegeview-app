@@ -245,4 +245,22 @@ class WpApiService {
       return [];
     }
   }
+
+  static Future<String> fetchAboutHtml() async {
+    try {
+      final response = await get(
+        Uri.parse('${AppConfig.instance.apiBase}/wp-json/wp/v2/pages?slug=about'),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data is List && data.isNotEmpty && data[0] is Map) {
+          final rendered = data[0]['content']?['rendered']?.toString().trim();
+          if (rendered != null && rendered.isNotEmpty) {
+            return rendered;
+          }
+        }
+      }
+    } catch (_) {}
+    return AppConfig.instance.aboutHtml;
+  }
 }

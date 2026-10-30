@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import '../utils/html_utils.dart';
 import '../services/wp_api_service.dart';
 
@@ -25,6 +26,11 @@ class Article {
     this.embeddedFeaturedMediaUrl,
     this.embeddedAuthorName,
   });
+
+  String get formattedDate {
+    final parsed = DateTime.tryParse(date);
+    return parsed != null ? '⏰ ${DateFormat('MMMM d, y').format(parsed)}' : '';
+  }
 
   Article copyWith({
     String? embeddedFeaturedMediaUrl,

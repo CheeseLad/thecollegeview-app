@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/article.dart';
 import '../providers/article_provider.dart';
-import '../widgets/search_bar.dart' as custom_search_bar;
 import '../widgets/article_list.dart';
 
 class SearchPage extends StatefulWidget {
@@ -74,10 +73,21 @@ class SearchPageState extends State<SearchPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: custom_search_bar.SearchBar(
+        title: TextField(
           controller: _searchController,
-          onSearchChanged: _onSearchChanged,
-          onClear: _clearSearch,
+          autofocus: true,
+          textInputAction: TextInputAction.search,
+          onChanged: (_) => _onSearchChanged(),
+          decoration: InputDecoration(
+            hintText: 'Search articles...',
+            border: InputBorder.none,
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: _clearSearch,
+                  )
+                : null,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),

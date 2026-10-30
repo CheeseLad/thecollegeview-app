@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../services/cache_service.dart';
 
 class ThemeProvider extends ChangeNotifier {
   static const String _boxName = 'settings';
@@ -19,15 +20,13 @@ class ThemeProvider extends ChangeNotifier {
 
   Future<void> init() async {
     try {
-      _box = await Hive.openBox(_boxName);
+      _box = await CacheService.openBoxWithRecovery(_boxName);
       final savedMode = _box?.get(_themeKey) as String?;
-      if (savedMode == 'light') {
-        _themeMode = ThemeMode.light;
-      } else if (savedMode == 'dark') {
-        _themeMode = ThemeMode.dark;
-      } else {
-        _themeMode = ThemeMode.system;
-      }
+      _themeMode = switch (savedMode) {
+        'light' => ThemeMode.light,
+        'dark' => ThemeMode.dark,
+        _ => ThemeMode.system,
+      };
 
       final savedFontSize = _box?.get(_fontSizeKey);
       if (savedFontSize is num) {

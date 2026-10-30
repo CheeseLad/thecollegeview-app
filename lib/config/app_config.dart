@@ -38,6 +38,14 @@ class AppConfig {
   static const bool defaultEnableAuthorTap = false;
   static const String defaultCopyrightNotice =
       '© The College View 1999-2026 - Maintained by Jake Farrell';
+  static const String defaultAboutHtml = '''
+<p>The College View is Dublin City University's only student newspaper, independently run voluntarily by students affiliated to DCU's Journalism Society. The newspaper was first published in 1999 after changing its name from The Bullsheet, its predecessor.</p>
+<p>The College View has nine sections – News, Opinions, Features, Irish, Sports, Lifestyle, Satire, Science and Tech and our arts section, The Hype. These sections cover everything from DCU student issues to national student issues, humour and satire to life through the eyes of students, as well as extensive sports coverage and analysis. The Irish section is written and edited by students studying Journalism through Irish in DCU.</p>
+<p>The College View is published fortnightly on Wednesday, with six issues per semester and is circulated among 12,000 students as well as DCU lecturers and staff.</p>
+<h3>Community standards and participation guidelines</h3>
+<p>The College View reserves the right to delete comments which it deems abusive. Such comments are deemed to be directly insulting, racist, sexist, xenophobic, or homophobic to other readers or its staff of journalists and writers.</p>
+<p>The College View welcomes criticism and opposing viewpoints through constructive and rational debate and wishes to create an atmosphere which encourages an open dialogue.</p>
+''';
   static const String defaultApiBase = 'https://tcvappapi.jakefarrell.ie';
   static const String defaultWebsite = 'https://thecollegeview.ie';
   static const String defaultWebsiteDomain = 'thecollegeview.ie';
@@ -101,6 +109,7 @@ class AppConfig {
   final String fallbackAuthorName;
   final bool enableAuthorTap;
   final String copyrightNotice;
+  final String aboutHtml;
   final String apiBase;
   final String website;
   final String websiteDomain;
@@ -116,6 +125,7 @@ class AppConfig {
     this.fallbackAuthorName = defaultFallbackAuthorName,
     this.enableAuthorTap = defaultEnableAuthorTap,
     this.copyrightNotice = defaultCopyrightNotice,
+    this.aboutHtml = defaultAboutHtml,
     this.apiBase = defaultApiBase,
     this.website = defaultWebsite,
     this.websiteDomain = defaultWebsiteDomain,
@@ -215,6 +225,10 @@ class AppConfig {
         [json['copyrightNotice'], json['copyright']],
         defaultCopyrightNotice,
       ),
+      aboutHtml: _pickString(
+        [json['aboutHtml'], json['about']],
+        defaultAboutHtml,
+      ),
       apiBase: _pickString([json['apiBase'], urls['apiBase']], defaultApiBase),
       website: website,
       websiteDomain: parsedDomain,
@@ -243,6 +257,7 @@ class AppConfig {
       'fallbackAuthorName': fallbackAuthorName,
       'enableAuthorTap': enableAuthorTap,
       'copyrightNotice': copyrightNotice,
+      'aboutHtml': aboutHtml,
       'urls': {
         'apiBase': apiBase,
         'website': website,

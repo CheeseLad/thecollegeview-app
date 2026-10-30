@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:thecollegeview/config/app_config.dart';
-import 'package:thecollegeview/config/app_urls.dart';
 import 'package:thecollegeview/services/wp_api_service.dart';
 
 void main() {
@@ -119,11 +118,10 @@ void main() {
       expect(json['urls']['website'], 'https://testview.ie');
     });
 
-    test('AppUrls and WpApiService delegate dynamically to AppConfig.instance',
-        () {
-      expect(AppUrls.apiBase, 'https://tcvappapi.jakefarrell.ie');
-      expect(AppUrls.website, 'https://thecollegeview.ie');
-      expect(AppUrls.websiteDomain, 'thecollegeview.ie');
+    test('AppConfig.instance and WpApiService update dynamically', () {
+      expect(AppConfig.instance.apiBase, 'https://tcvappapi.jakefarrell.ie');
+      expect(AppConfig.instance.website, 'https://thecollegeview.ie');
+      expect(AppConfig.instance.websiteDomain, 'thecollegeview.ie');
       expect(WpApiService.fallbackAuthorName, 'The College View');
 
       const customConfig = AppConfig(
@@ -138,11 +136,11 @@ void main() {
 
       AppConfig.setInstance(customConfig);
 
-      expect(AppUrls.apiBase, 'https://api.horizon.ie');
-      expect(AppUrls.website, 'https://horizon.ie');
-      expect(AppUrls.websiteDomain, 'horizon.ie');
-      expect(AppUrls.instagram, 'https://instagram.com/horizon');
-      expect(AppUrls.whatsapp, 'https://whatsapp.com/horizon');
+      expect(AppConfig.instance.apiBase, 'https://api.horizon.ie');
+      expect(AppConfig.instance.website, 'https://horizon.ie');
+      expect(AppConfig.instance.websiteDomain, 'horizon.ie');
+      expect(AppConfig.instance.instagramUrl, 'https://instagram.com/horizon');
+      expect(AppConfig.instance.whatsappUrl, 'https://whatsapp.com/horizon');
       expect(WpApiService.fallbackAuthorName, 'New Horizon Desk');
     });
   });

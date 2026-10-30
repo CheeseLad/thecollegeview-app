@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../utils/image_proxy.dart';
+import '../config/app_config.dart';
 
 class NetworkImageWithFallback extends StatelessWidget {
   final String imageUrl;
@@ -20,6 +20,14 @@ class NetworkImageWithFallback extends StatelessWidget {
     this.fit = BoxFit.cover,
     this.borderRadius,
   });
+
+  static String _proxiedImageUrl(String originalUrl) {
+    if (originalUrl.isEmpty || originalUrl.contains('weserv.nl')) {
+      return originalUrl;
+    }
+    final encodedUrl = Uri.encodeComponent(originalUrl);
+    return '${AppConfig.instance.imageProxyUrl}$encodedUrl';
+  }
 
   Widget _buildFallback(BuildContext context) {
     return Container(
@@ -46,6 +54,24 @@ class NetworkImageWithFallback extends StatelessWidget {
     );
   }
 
+  Widget _buildPlaceholder(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: borderRadius,
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final trimmedUrl = imageUrl.trim();
@@ -63,8 +89,7 @@ class NetworkImageWithFallback extends StatelessWidget {
 
     // Only use third-party proxy on Web where browser CORS may restrict direct requests.
     // On native mobile (Android/iOS), request directly from source.
-    final effectiveUrl =
-        kIsWeb ? ImageProxy.getProxiedImageUrl(trimmedUrl) : trimmedUrl;
+    final effectiveUrl = kIsWeb ? _proxiedImageUrl(trimmedUrl) : trimmedUrl;
 
     Widget imageWidget;
     if (kIsWeb) {
@@ -76,21 +101,7 @@ class NetworkImageWithFallback extends StatelessWidget {
         filterQuality: FilterQuality.low,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
-          return Container(
-            width: width,
-            height: height,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: borderRadius,
-            ),
-            child: const Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          );
+          return _buildPlaceholder(context);
         },
         errorBuilder: (context, error, stackTrace) => _buildFallback(context),
       );
@@ -104,21 +115,7 @@ class NetworkImageWithFallback extends StatelessWidget {
         fadeInDuration: Duration.zero,
         fadeOutDuration: Duration.zero,
         useOldImageOnUrlChange: true,
-        placeholder: (context, url) => Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: borderRadius,
-          ),
-          child: const Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-        ),
+        placeholder: (context, url) => _buildPlaceholder(context),
         errorWidget: (context, url, error) => _buildFallback(context),
       );
     }

@@ -6,7 +6,6 @@ import 'theme/app_theme.dart';
 import 'services/cache_service.dart';
 import 'providers/article_provider.dart';
 import 'providers/saved_articles_provider.dart';
-import 'providers/page_content_provider.dart';
 import 'screens/articles_screen.dart';
 import 'screens/article_detail_screen.dart';
 import 'utils/deep_link_handler.dart';
@@ -17,13 +16,14 @@ Future<void> main() async {
   await AppConfig.load();
 
   await Hive.initFlutter();
-  await CacheService().init();
 
   final savedArticlesProvider = SavedArticlesProvider();
-  await savedArticlesProvider.init();
-
   final themeProvider = ThemeProvider();
-  await themeProvider.init();
+  await Future.wait([
+    CacheService().init(),
+    savedArticlesProvider.init(),
+    themeProvider.init(),
+  ]);
 
   runApp(MyApp(
     savedArticlesProvider: savedArticlesProvider,
@@ -76,7 +76,6 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => ArticleProvider()),
         ChangeNotifierProvider.value(value: savedArticlesProvider),
-        ChangeNotifierProvider(create: (context) => PageContentProvider()),
         ChangeNotifierProvider.value(value: themeProvider),
       ],
       child: Consumer<ThemeProvider>(

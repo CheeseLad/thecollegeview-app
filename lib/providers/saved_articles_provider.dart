@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/saved_article.dart';
 import '../models/article.dart';
+import '../services/cache_service.dart';
 import '../services/wp_api_service.dart';
 
 class SavedArticlesProvider extends ChangeNotifier {
@@ -12,13 +13,7 @@ class SavedArticlesProvider extends ChangeNotifier {
   List<SavedArticle> get savedArticles => _savedArticles;
 
   Future<void> init() async {
-    try {
-      _box = await Hive.openBox<Map>(_boxName);
-    } catch (_) {
-      // In case of box corruption, attempt recovery
-      await Hive.deleteBoxFromDisk(_boxName);
-      _box = await Hive.openBox<Map>(_boxName);
-    }
+    _box = await CacheService.openBoxWithRecovery<Map>(_boxName);
     _loadSavedArticles();
   }
 

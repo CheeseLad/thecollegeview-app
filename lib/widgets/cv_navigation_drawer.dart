@@ -10,7 +10,6 @@ import '../models/category.dart';
 import '../config/app_config.dart';
 import '../theme/app_theme.dart';
 import '../utils/deep_link_handler.dart';
-import 'social_media_icon.dart';
 
 class CVNavigationDrawer extends StatelessWidget {
   const CVNavigationDrawer({super.key});
@@ -118,17 +117,17 @@ class CVNavigationDrawer extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SocialMediaIcon(
+                _SocialMediaIcon(
                   icon: FontAwesomeIcons.instagram,
                   url: config.instagramUrl,
                 ),
                 const SizedBox(width: 10),
-                SocialMediaIcon(
+                _SocialMediaIcon(
                   icon: FontAwesomeIcons.whatsapp,
                   url: config.whatsappUrl,
                 ),
                 const SizedBox(width: 10),
-                SocialMediaIcon(
+                _SocialMediaIcon(
                   icon: FontAwesomeIcons.globe,
                   url: config.website,
                 ),
@@ -183,6 +182,29 @@ class CVNavigationDrawer extends StatelessWidget {
           );
         }),
       ],
+    );
+  }
+}
+
+class _SocialMediaIcon extends StatelessWidget {
+  final FaIconData icon;
+  final String url;
+
+  const _SocialMediaIcon({required this.icon, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => DeepLinkHandler.launchExternalUrl(
+        url,
+        context: context,
+        showErrorSnackBar: true,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: FaIcon(icon, size: 28),
+      ),
     );
   }
 }

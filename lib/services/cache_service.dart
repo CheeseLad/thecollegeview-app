@@ -11,13 +11,17 @@ class CacheService {
   factory CacheService() => _instance;
   CacheService._internal();
 
-  Future<void> init() async {
+  static Future<Box<T>> openBoxWithRecovery<T>(String name) async {
     try {
-      _box = await Hive.openBox<Map>(_boxName);
+      return await Hive.openBox<T>(name);
     } catch (_) {
-      await Hive.deleteBoxFromDisk(_boxName);
-      _box = await Hive.openBox<Map>(_boxName);
+      await Hive.deleteBoxFromDisk(name);
+      return await Hive.openBox<T>(name);
     }
+  }
+
+  Future<void> init() async {
+    _box = await openBoxWithRecovery<Map>(_boxName);
     _clearExpired();
   }
 
