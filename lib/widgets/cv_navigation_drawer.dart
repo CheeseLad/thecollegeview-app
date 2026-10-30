@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../screens/articles_screen.dart';
 import '../screens/saved_articles_screen.dart';
 import '../screens/about_screen.dart';
 import '../screens/contact_screen.dart';
 import '../providers/article_provider.dart';
 import '../models/category.dart';
-import '../config/app_urls.dart';
+import '../config/app_config.dart';
 import '../theme/app_theme.dart';
+import '../utils/deep_link_handler.dart';
 import 'social_media_icon.dart';
 
 class CVNavigationDrawer extends StatelessWidget {
@@ -26,6 +26,7 @@ class CVNavigationDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final articleProvider = Provider.of<ArticleProvider>(context);
+    final config = AppConfig.instance;
 
     return Drawer(
       child: Column(
@@ -51,7 +52,7 @@ class CVNavigationDrawer extends StatelessWidget {
                     articleProvider.clearFilters();
                     _navigateTo(
                       context,
-                      const ArticlesScreen(categoryName: "All Articles"),
+                      const ArticlesScreen(categoryName: 'All Articles'),
                     );
                   },
                 ),
@@ -83,43 +84,27 @@ class CVNavigationDrawer extends StatelessWidget {
                 ListTile(
                   title: const Text('Privacy Policy'),
                   leading: const Icon(Icons.privacy_tip_outlined),
-                  onTap: () async {
+                  onTap: () {
                     Navigator.pop(context);
-                    final uri = Uri.tryParse(AppUrls.privacyPolicy);
-                    if (uri != null && await canLaunchUrl(uri)) {
-                      await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
-                      );
-                    }
+                    DeepLinkHandler.launchExternalUrl(config.privacyPolicyUrl);
                   },
                 ),
                 Consumer<ThemeProvider>(
                   builder: (context, themeProvider, child) {
-                    IconData icon;
-                    String label;
-                    switch (themeProvider.themeMode) {
-                      case ThemeMode.system:
-                        icon = Icons.brightness_auto;
-                        label = 'Theme: System';
-                        break;
-                      case ThemeMode.light:
-                        icon = Icons.light_mode;
-                        label = 'Theme: Light';
-                        break;
-                      case ThemeMode.dark:
-                        icon = Icons.dark_mode;
-                        label = 'Theme: Dark';
-                        break;
-                    }
+                    final (icon, label) = switch (themeProvider.themeMode) {
+                      ThemeMode.system => (
+                          Icons.brightness_auto,
+                          'Theme: System'
+                        ),
+                      ThemeMode.light => (Icons.light_mode, 'Theme: Light'),
+                      ThemeMode.dark => (Icons.dark_mode, 'Theme: Dark'),
+                    };
 
                     return ListTile(
                       title: Text(label),
                       subtitle: const Text('Tap to cycle theme'),
                       leading: Icon(icon),
-                      onTap: () {
-                        themeProvider.cycleThemeMode();
-                      },
+                      onTap: themeProvider.cycleThemeMode,
                     );
                   },
                 ),
@@ -135,17 +120,17 @@ class CVNavigationDrawer extends StatelessWidget {
               children: [
                 SocialMediaIcon(
                   icon: FontAwesomeIcons.instagram,
-                  url: AppUrls.instagram,
+                  url: config.instagramUrl,
                 ),
                 const SizedBox(width: 10),
                 SocialMediaIcon(
                   icon: FontAwesomeIcons.whatsapp,
-                  url: AppUrls.whatsapp,
+                  url: config.whatsappUrl,
                 ),
                 const SizedBox(width: 10),
                 SocialMediaIcon(
                   icon: FontAwesomeIcons.globe,
-                  url: AppUrls.website,
+                  url: config.website,
                 ),
               ],
             ),

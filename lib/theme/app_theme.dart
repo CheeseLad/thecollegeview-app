@@ -41,24 +41,6 @@ class ThemeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get isDark {
-    if (_themeMode == ThemeMode.light) return false;
-    if (_themeMode == ThemeMode.dark) return true;
-    return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
-        Brightness.dark;
-  }
-
-  String get themeModeLabel {
-    switch (_themeMode) {
-      case ThemeMode.system:
-        return 'System';
-      case ThemeMode.light:
-        return 'Light';
-      case ThemeMode.dark:
-        return 'Dark';
-    }
-  }
-
   String get articleFontSizeLabel {
     if (_articleFontSize <= 14.5) return 'Small';
     if (_articleFontSize <= 17.0) return 'Medium';
@@ -73,12 +55,6 @@ class ThemeProvider extends ChangeNotifier {
     if (_box != null && _box!.isOpen) {
       _box!.put(_fontSizeKey, _articleFontSize);
     }
-    notifyListeners();
-  }
-
-  void setThemeMode(ThemeMode mode) {
-    _themeMode = mode;
-    _saveThemeMode(mode);
     notifyListeners();
   }
 

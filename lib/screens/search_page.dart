@@ -70,6 +70,8 @@ class SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isInitial = !_hasSearched && _searchController.text.trim().isEmpty;
+
     return Scaffold(
       appBar: AppBar(
         title: custom_search_bar.SearchBar(
@@ -79,55 +81,17 @@ class SearchPageState extends State<SearchPage> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (!_hasSearched && _searchController.text.trim().isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'Type to search articles...',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_filteredArticles.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'No articles found.',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ArticleList(
-      categoryName: 'Search Results',
-      articles: _filteredArticles,
+      body: ArticleList(
+        categoryName: 'Search Results',
+        articles: _filteredArticles,
+        isLoading: _isLoading,
+        emptyIcon: isInitial ? Icons.search : Icons.search_off,
+        emptyMessage:
+            isInitial ? 'Type to search articles...' : 'No articles found.',
+      ),
     );
   }
 }

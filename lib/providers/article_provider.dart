@@ -1,46 +1,72 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
 import '../config/category_config.dart';
 import '../models/article.dart';
 import '../models/category.dart';
-import '../models/tag.dart';
 import '../services/wp_api_service.dart';
-import '../config/app_urls.dart';
 
 class ArticleProvider with ChangeNotifier {
+  static const String _postFields =
+      'id,date,title,content,link,author,featured_media,tags,_links,_embedded';
+  static const String _postEmbed = 'author,wp:featuredmedia';
+
   List<Article> _articles = [];
   List<Category> _categories = [];
-  List<Tag> _tags = [];
   bool _loading = false;
   String? _error;
   int _currentPage = 1;
   int _totalPages = 1;
   int? _selectedCategory;
-  int? _selectedTag;
-  List<int> _pageSizes = [];
 
   List<Article> get articles => _articles;
   List<Category> get categories => _categories;
-  List<Tag> get tags => _tags;
   bool get loading => _loading;
   String? get error => _error;
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
   int? get selectedCategory => _selectedCategory;
-  int? get selectedTag => _selectedTag;
 
   ArticleProvider() {
     fetchCategories();
-    fetchTags();
     fetchArticles();
+  }
+
+  Uri _buildPostsUri(Map<String, String> queryParameters, {int? postId}) {
+    final path = postId != null
+        ? '/wp-json/wp/v2/posts/$postId'
+        : '/wp-json/wp/v2/posts';
+    return Uri.parse('${AppConfig.instance.apiBase}$path').replace(
+      queryParameters: {
+        ...queryParameters,
+        '_fields': _postFields,
+        '_embed': _postEmbed,
+      },
+    );
+  }
+
+  Future<List<Article>> _fetchPostsList(
+    Map<String, String> queryParameters,
+  ) async {
+    final response = await WpApiService.get(_buildPostsUri(queryParameters));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data is List) {
+        return data
+            .whereType<Map<String, dynamic>>()
+            .map(Article.fromJson)
+            .toList();
+      }
+    }
+    return [];
   }
 
   Future<void> fetchCategories() async {
     try {
       final config = await CategoryConfig.load();
 
-      final url = '${AppUrls.apiBase}/wp-json/wp/v2/categories'
+      final url = '${AppConfig.instance.apiBase}/wp-json/wp/v2/categories'
           '?per_page=100'
           '&_fields=id,name,slug,parent,count';
 
@@ -96,52 +122,31 @@ class ArticleProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchStickyArticles() async {
-    final url =
-        '${AppUrls.apiBase}/wp-json/wp/v2/posts?sticky=true&_fields=id,date,title,content,link,author,featured_media,tags';
-    try {
-      final response = await WpApiService.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        List<Article> loadedArticles = (json.decode(response.body) as List)
-            .map((data) => Article.fromJson(data))
-            .toList();
-        _articles = loadedArticles;
-        _error = null;
-      } else {
-        _error = 'Failed to load sticky articles';
-      }
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      notifyListeners();
-    }
-  }
-
   Future<void> fetchArticles({bool forceRefresh = false}) async {
     _loading = true;
     notifyListeners();
 
-    final categoryFilter =
-        _selectedCategory != null ? '&categories=$_selectedCategory' : '';
-    final tagFilter = _selectedTag != null ? '&tags=$_selectedTag' : '';
-    final url =
-        '${AppUrls.apiBase}/wp-json/wp/v2/posts/?page=$_currentPage&per_page=10$categoryFilter$tagFilter&_fields=id,date,title,content,link,author,featured_media,tags,_links,_embedded&_embed=author,wp:featuredmedia';
+    final uri = _buildPostsUri({
+      'page': '$_currentPage',
+      'per_page': '10',
+      if (_selectedCategory != null) 'categories': '$_selectedCategory',
+    });
+
     try {
       final response = await WpApiService.get(
-        Uri.parse(url),
+        uri,
         forceRefresh: forceRefresh,
       );
       if (response.statusCode == 200) {
-        List<Article> loadedArticles = (json.decode(response.body) as List)
-            .map((data) => Article.fromJson(data))
+        final loadedArticles = (json.decode(response.body) as List)
+            .whereType<Map<String, dynamic>>()
+            .map(Article.fromJson)
             .toList();
 
         if (_currentPage == 1) {
           _articles = loadedArticles;
-          _pageSizes = [loadedArticles.length];
         } else {
           _articles.addAll(loadedArticles);
-          _pageSizes.add(loadedArticles.length);
         }
 
         final totalPagesHeader = response.headers['x-wp-totalpages'] ??
@@ -171,17 +176,14 @@ class ArticleProvider with ChangeNotifier {
     final query = searchQuery.trim();
     if (query.isEmpty) return [];
 
-    final encodedQuery = Uri.encodeQueryComponent(query);
-    final url =
-        '${AppUrls.apiBase}/wp-json/wp/v2/posts?search=$encodedQuery&per_page=20&_fields=id,date,title,content,link,author,featured_media,tags,_links,_embedded&_embed=author,wp:featuredmedia';
     try {
-      final response = await WpApiService.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Article.fromJson(json)).toList();
-      }
-    } catch (_) {}
-    return [];
+      return await _fetchPostsList({
+        'search': query,
+        'per_page': '20',
+      });
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<List<Article>> getArticlesByAuthor(
@@ -209,27 +211,25 @@ class ArticleProvider with ChangeNotifier {
         cleanName.toLowerCase() !=
             WpApiService.fallbackAuthorName.toLowerCase()) {
       try {
-        final url =
-            '${AppUrls.apiBase}/wp-json/wp/v2/posts?author=$authorId&per_page=20&_fields=id,date,title,content,link,author,featured_media,tags,_links,_embedded&_embed=author,wp:featuredmedia';
-        final response = await WpApiService.get(Uri.parse(url));
+        final response = await WpApiService.get(
+          _buildPostsUri({'author': '$authorId', 'per_page': '20'}),
+        );
         if (response.statusCode == 200) {
           final List<dynamic> data = json.decode(response.body);
-          for (final item in data) {
-            if (item is Map<String, dynamic>) {
-              final embedded = item['_embedded'];
-              String wpUserName = '';
-              if (embedded is Map &&
-                  embedded['author'] is List &&
-                  (embedded['author'] as List).isNotEmpty &&
-                  embedded['author'][0] is Map) {
-                wpUserName =
-                    embedded['author'][0]['name']?.toString().trim() ?? '';
-              }
-              if (wpUserName.toLowerCase() == cleanName.toLowerCase()) {
-                final parsed = Article.fromJson(item);
-                WpApiService.cacheAuthorName(parsed.link, cleanName);
-                articlesById[parsed.id] = parsed;
-              }
+          for (final item in data.whereType<Map<String, dynamic>>()) {
+            final embedded = item['_embedded'];
+            String wpUserName = '';
+            if (embedded is Map &&
+                embedded['author'] is List &&
+                (embedded['author'] as List).isNotEmpty &&
+                embedded['author'][0] is Map) {
+              wpUserName =
+                  embedded['author'][0]['name']?.toString().trim() ?? '';
+            }
+            if (wpUserName.toLowerCase() == cleanName.toLowerCase()) {
+              final parsed = Article.fromJson(item);
+              WpApiService.cacheAuthorName(parsed.link, cleanName);
+              articlesById[parsed.id] = parsed;
             }
           }
         }
@@ -295,17 +295,9 @@ class ArticleProvider with ChangeNotifier {
     }
 
     try {
-      final encodedSlug = Uri.encodeQueryComponent(lastSegment);
-      final response = await WpApiService.get(
-        Uri.parse(
-          '${AppUrls.apiBase}/wp-json/wp/v2/posts?slug=$encodedSlug&_fields=id,date,title,content,link,author,featured_media,tags,_links,_embedded&_embed=author,wp:featuredmedia',
-        ),
-      );
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data is List && data.isNotEmpty && data[0] is Map<String, dynamic>) {
-          return Article.fromJson(data[0] as Map<String, dynamic>);
-        }
+      final results = await _fetchPostsList({'slug': lastSegment});
+      if (results.isNotEmpty) {
+        return results.first;
       }
     } catch (_) {}
 
@@ -320,123 +312,65 @@ class ArticleProvider with ChangeNotifier {
     }
   }
 
-  void previousPage() {
-    if (_loading) return;
-    if (_currentPage > 1 && _pageSizes.length >= _currentPage) {
-      _currentPage--;
-      _articles =
-          _articles.sublist(0, _articles.length - _pageSizes[_currentPage]);
-      _pageSizes = _pageSizes.sublist(0, _currentPage);
-      notifyListeners();
-    }
-  }
-
   void selectCategory(int? categoryId) {
     _selectedCategory = categoryId;
     _currentPage = 1;
-    _pageSizes = [];
     fetchArticles();
   }
 
   Future<void> refreshArticles() async {
     _currentPage = 1;
-    _pageSizes = [];
     await fetchArticles(forceRefresh: true);
   }
 
-  Future<void> fetchTags() async {
-    final url = '${AppUrls.apiBase}/wp-json/wp/v2/tags?per_page=100';
+  Future<List<Article>> getArticlesByTag(
+    int tagId, {
+    int page = 1,
+    int perPage = 20,
+  }) async {
     try {
-      final response = await WpApiService.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        List<Tag> loadedTags = (json.decode(response.body) as List)
-            .map((data) => Tag.fromJson(data))
-            .toList();
-        _tags = loadedTags;
-        notifyListeners();
-      } else {
-        _error = 'Failed to load tags';
-        notifyListeners();
-      }
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
+      return await _fetchPostsList({
+        'tags': '$tagId',
+        'page': '$page',
+        'per_page': '$perPage',
+      });
+    } catch (_) {
+      return [];
     }
-  }
-
-  Future<List<Article>> getArticlesByTag(int tagId,
-      {int page = 1, int perPage = 20}) async {
-    final url =
-        '${AppUrls.apiBase}/wp-json/wp/v2/posts/?tags=$tagId&page=$page&per_page=$perPage&_fields=id,date,title,content,link,author,featured_media,tags,_links,_embedded&_embed=author,wp:featuredmedia';
-    try {
-      final response = await WpApiService.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Article.fromJson(json)).toList();
-      }
-    } catch (_) {}
-    return [];
-  }
-
-  Future<void> fetchArticlesByTag(int tagId) async {
-    _selectedTag = tagId;
-    _selectedCategory = null;
-    _currentPage = 1;
-    _pageSizes = [];
-    await fetchArticles();
-  }
-
-  void selectTag(int? tagId) {
-    _selectedTag = tagId;
-    _selectedCategory = null;
-    _currentPage = 1;
-    _pageSizes = [];
-    fetchArticles();
   }
 
   void clearFilters() {
     _selectedCategory = null;
-    _selectedTag = null;
     _currentPage = 1;
-    _pageSizes = [];
     fetchArticles();
   }
 
   Future<Article?> fetchArticleById(int articleId) async {
     try {
       final response = await WpApiService.get(
-        Uri.parse(
-            '${AppUrls.apiBase}/wp-json/wp/v2/posts/$articleId?_fields=id,date,title,content,link,author,featured_media,tags,_links,_embedded&_embed=author,wp:featuredmedia'),
+        _buildPostsUri({}, postId: articleId),
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return Article.fromJson(data);
-      } else {
-        return null;
       }
-    } catch (e) {
-      return null;
-    }
+    } catch (_) {}
+    return null;
   }
 
   Future<List<Article>> getRelatedArticles(Article article) async {
     if (article.tags.isEmpty) return [];
 
-    final tagIds = article.tags.take(5).join(',');
-    final url =
-        '${AppUrls.apiBase}/wp-json/wp/v2/posts?tags=$tagIds&per_page=10&exclude=${article.id}&_fields=id,date,title,content,link,author,featured_media,tags,_links,_embedded&_embed=author,wp:featuredmedia';
     try {
-      final response = await WpApiService.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final results = (json.decode(response.body) as List)
-            .map((data) => Article.fromJson(data))
-            .toList();
-        results.shuffle(Random());
-        return results.take(3).toList();
-      }
-    } catch (e) {
-      // ignore
+      final results = await _fetchPostsList({
+        'tags': article.tags.take(5).join(','),
+        'per_page': '10',
+        'exclude': '${article.id}',
+      });
+      results.shuffle(Random());
+      return results.take(3).toList();
+    } catch (_) {
+      return [];
     }
-    return [];
   }
 }

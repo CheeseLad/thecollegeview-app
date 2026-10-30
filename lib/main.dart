@@ -7,12 +7,9 @@ import 'services/cache_service.dart';
 import 'providers/article_provider.dart';
 import 'providers/saved_articles_provider.dart';
 import 'providers/page_content_provider.dart';
-import 'screens/about_screen.dart';
 import 'screens/articles_screen.dart';
 import 'screens/article_detail_screen.dart';
-import 'screens/contact_screen.dart';
-import 'screens/deep_link_article_screen.dart';
-import 'screens/saved_articles_screen.dart';
+import 'utils/deep_link_handler.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,51 +58,15 @@ class MyApp extends StatelessWidget {
       );
     }
 
-    if (routeName == '/' || routeName.isEmpty) {
-      return MaterialPageRoute(
-        settings: settings,
-        builder: (context) =>
-            const ArticlesScreen(categoryName: "All Articles"),
-      );
-    }
-
-    // Handle Universal Links (iOS) and App Links (Android)
-    final uri = Uri.tryParse(routeName);
-    if (uri != null) {
-      final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
-      if (segments.length == 1) {
-        final single = segments.first.toLowerCase();
-        if (single == 'about') {
-          return MaterialPageRoute(
-            settings: settings,
-            builder: (context) => const AboutScreen(),
-          );
-        }
-        if (single == 'contact') {
-          return MaterialPageRoute(
-            settings: settings,
-            builder: (context) => const ContactScreen(),
-          );
-        }
-        if (single == 'saved') {
-          return MaterialPageRoute(
-            settings: settings,
-            builder: (context) => const SavedArticlesScreen(),
-          );
-        }
-      }
-
-      if (segments.isNotEmpty || uri.queryParameters.containsKey('p')) {
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (context) => DeepLinkArticleScreen(urlOrPath: routeName),
-        );
-      }
-    }
+    final destination = DeepLinkHandler.resolveDestinationWidget(
+      routeName,
+      allowSavedRoute: true,
+    );
 
     return MaterialPageRoute(
       settings: settings,
-      builder: (context) => const ArticlesScreen(categoryName: "All Articles"),
+      builder: (context) =>
+          destination ?? const ArticlesScreen(categoryName: 'All Articles'),
     );
   }
 
@@ -126,7 +87,7 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
-            home: const ArticlesScreen(categoryName: "All Articles"),
+            home: const ArticlesScreen(categoryName: 'All Articles'),
             onGenerateRoute: _onGenerateRoute,
           );
         },

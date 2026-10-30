@@ -3,13 +3,14 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
-import '../config/app_urls.dart';
+import '../models/article.dart';
 import '../utils/html_utils.dart';
 import 'cache_service.dart';
 
 class WpApiService {
   static String get fallbackAuthorName => AppConfig.instance.fallbackAuthorName;
-  static String get _authorInfoEndpoint => '${AppUrls.apiBase}/get-subheading';
+  static String get _authorInfoEndpoint =>
+      '${AppConfig.instance.apiBase}/get-subheading';
 
   static final CacheService _cache = CacheService();
 
@@ -40,6 +41,57 @@ class WpApiService {
     if (articleUrl.isNotEmpty && name.isNotEmpty) {
       _authorMemoryCache[articleUrl] = name;
     }
+  }
+
+  static String? getInitialFeaturedMediaUrl(
+    Article article, [
+    String? overrideUrl,
+  ]) {
+    for (final candidate in [
+      overrideUrl,
+      article.embeddedFeaturedMediaUrl,
+      getCachedFeaturedMediaUrl(article.featuredMedia),
+    ]) {
+      if (candidate != null && candidate.isNotEmpty) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  static String? getInitialAuthorName(
+    Article article, [
+    String? overrideName,
+  ]) {
+    for (final candidate in [
+      overrideName,
+      article.embeddedAuthorName,
+      getCachedAuthorName(article.link),
+    ]) {
+      if (candidate != null && candidate.isNotEmpty) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  static Future<String> resolveFeaturedMediaUrl(
+    Article article, [
+    String? overrideUrl,
+  ]) async {
+    final cached = getInitialFeaturedMediaUrl(article, overrideUrl);
+    if (cached != null) return cached;
+    if (article.featuredMedia <= 0) return '';
+    return fetchFeaturedMediaUrl(article.featuredMedia);
+  }
+
+  static Future<String> resolveAuthorName(
+    Article article, [
+    String? overrideName,
+  ]) async {
+    final cached = getInitialAuthorName(article, overrideName);
+    if (cached != null) return cached;
+    return fetchAuthorName(article.link, article.author);
   }
 
   static Future<http.Response> get(
@@ -159,7 +211,7 @@ class WpApiService {
     }
     try {
       final response = await get(
-        Uri.parse('${AppUrls.apiBase}/wp-json/wp/v2/media/$mediaId'),
+        Uri.parse('${AppConfig.instance.apiBase}/wp-json/wp/v2/media/$mediaId'),
       );
 
       if (response.statusCode == 200) {
@@ -180,7 +232,7 @@ class WpApiService {
     if (tagIds.isEmpty) return [];
     try {
       final url =
-          '${AppUrls.apiBase}/wp-json/wp/v2/tags?include=${tagIds.join(',')}';
+          '${AppConfig.instance.apiBase}/wp-json/wp/v2/tags?include=${tagIds.join(',')}';
       final response = await get(Uri.parse(url));
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as List;

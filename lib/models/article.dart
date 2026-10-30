@@ -13,7 +13,7 @@ class Article {
   final String? embeddedFeaturedMediaUrl;
   final String? embeddedAuthorName;
 
-  Article({
+  const Article({
     required this.id,
     required this.date,
     required this.title,
@@ -25,6 +25,25 @@ class Article {
     this.embeddedFeaturedMediaUrl,
     this.embeddedAuthorName,
   });
+
+  Article copyWith({
+    String? embeddedFeaturedMediaUrl,
+    String? embeddedAuthorName,
+  }) {
+    return Article(
+      id: id,
+      date: date,
+      title: title,
+      content: content,
+      link: link,
+      author: author,
+      featuredMedia: featuredMedia,
+      tags: tags,
+      embeddedFeaturedMediaUrl:
+          embeddedFeaturedMediaUrl ?? this.embeddedFeaturedMediaUrl,
+      embeddedAuthorName: embeddedAuthorName ?? this.embeddedAuthorName,
+    );
+  }
 
   factory Article.fromJson(Map<String, dynamic> json) {
     final rawTags = json['tags'];

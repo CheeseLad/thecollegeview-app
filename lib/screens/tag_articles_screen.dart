@@ -4,6 +4,7 @@ import '../providers/article_provider.dart';
 import '../models/article.dart';
 import '../models/tag.dart';
 import '../widgets/article_list.dart';
+import '../widgets/offline_banner.dart';
 
 class TagArticlesScreen extends StatefulWidget {
   final Tag tag;
@@ -56,90 +57,26 @@ class _TagArticlesScreenState extends State<TagArticlesScreen> {
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadArticles,
-        child: _buildBody(),
+      body: Column(
+        children: [
+          OfflineBanner(onRetry: _loadArticles),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _loadArticles,
+              child: ArticleList(
+                categoryName: widget.tag.name,
+                articles: _articles,
+                isLoading: _isLoading,
+                errorMessage: _error,
+                errorTitle: 'Failed to load tagged articles',
+                emptyMessage: 'No articles found for tag "${widget.tag.name}"',
+                emptyIcon: Icons.article_outlined,
+                onRetry: _loadArticles,
+              ),
+            ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Failed to load tagged articles',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-                onPressed: _loadArticles,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_articles.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.article_outlined,
-                size: 64,
-                color: Theme.of(context).colorScheme.outline,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No articles found for tag "${widget.tag.name}"',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return ArticleList(
-      categoryName: widget.tag.name,
-      articles: _articles,
     );
   }
 }

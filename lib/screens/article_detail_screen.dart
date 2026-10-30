@@ -48,40 +48,13 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _authorNameFuture = _resolveAuthorName();
-    _featuredMediaUrlFuture = _resolveFeaturedMediaUrl();
-    _tagNamesFuture = _resolveTagNames();
-  }
-
-  Future<String> _resolveAuthorName() async {
-    final cached = widget.authorName ??
-        WpApiService.getCachedAuthorName(widget.article.link) ??
-        widget.article.embeddedAuthorName;
-    if (cached != null && cached.isNotEmpty) {
-      return cached;
-    }
-    return await WpApiService.fetchAuthorName(
-        widget.article.link, widget.article.author);
-  }
-
-  Future<String> _resolveFeaturedMediaUrl() async {
-    final cached = widget.featuredMediaUrl ??
-        widget.article.embeddedFeaturedMediaUrl ??
-        WpApiService.getCachedFeaturedMediaUrl(widget.article.featuredMedia);
-    if (cached != null && cached.isNotEmpty) {
-      return cached;
-    }
-    if (widget.article.featuredMedia <= 0) return '';
-    return await WpApiService.fetchFeaturedMediaUrl(
-        widget.article.featuredMedia);
-  }
-
-  Future<List<String>> _resolveTagNames() async {
-    final cached = widget.tagNames;
-    if (cached != null && cached.isNotEmpty) {
-      return cached;
-    }
-    return await WpApiService.fetchTagNames(widget.article.tags);
+    _authorNameFuture =
+        WpApiService.resolveAuthorName(widget.article, widget.authorName);
+    _featuredMediaUrlFuture = WpApiService.resolveFeaturedMediaUrl(
+        widget.article, widget.featuredMediaUrl);
+    _tagNamesFuture = (widget.tagNames != null && widget.tagNames!.isNotEmpty)
+        ? Future.value(widget.tagNames!)
+        : WpApiService.fetchTagNames(widget.article.tags);
   }
 
   void _showFontSizeSheet(BuildContext context) {
@@ -363,12 +336,10 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                 ),
                               FutureBuilder<String>(
                                 future: _authorNameFuture,
+                                initialData: WpApiService.getInitialAuthorName(
+                                    widget.article, widget.authorName),
                                 builder: (context, snapshot) {
-                                  final author = snapshot.data ??
-                                      widget.authorName ??
-                                      WpApiService.getCachedAuthorName(
-                                          widget.article.link) ??
-                                      '';
+                                  final author = snapshot.data ?? '';
                                   if (author.isEmpty) {
                                     if (snapshot.connectionState ==
                                         ConnectionState.waiting) {
@@ -410,11 +381,11 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                       .isNotEmpty))
                             FutureBuilder<String>(
                               future: _featuredMediaUrlFuture,
+                              initialData:
+                                  WpApiService.getInitialFeaturedMediaUrl(
+                                      widget.article, widget.featuredMediaUrl),
                               builder: (context, snapshot) {
-                                final mediaUrl = snapshot.data ??
-                                    widget.featuredMediaUrl ??
-                                    widget.article.embeddedFeaturedMediaUrl ??
-                                    '';
+                                final mediaUrl = snapshot.data ?? '';
                                 if (mediaUrl.isNotEmpty) {
                                   return Container(
                                     margin: const EdgeInsets.only(bottom: 20),
@@ -524,15 +495,10 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                                 widget.article.tags[index];
 
                                             return GestureDetector(
-                                              onTap: () async {
+                                              onTap: () {
                                                 final tag = Tag(
                                                   id: tagId,
                                                   name: tagName,
-                                                  slug: tagName
-                                                      .toLowerCase()
-                                                      .replaceAll(' ', '-'),
-                                                  description: '',
-                                                  count: 0,
                                                 );
 
                                                 Navigator.push(
@@ -689,11 +655,6 @@ class _RelatedArticlesSectionState extends State<_RelatedArticlesSection> {
                 ),
               ),
             ),
-            //Container(
-            //  width: double.infinity,
-            //  height: 2,
-            //  color: Theme.of(context).colorScheme.onSurface,
-            //),
             Container(
               color: Theme.of(context).scaffoldBackgroundColor,
               padding: const EdgeInsets.fromLTRB(15.0, 12.0, 15.0, 20.0),

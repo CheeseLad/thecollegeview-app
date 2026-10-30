@@ -51,18 +51,18 @@ class SavedArticlesProvider extends ChangeNotifier {
       return;
     }
 
-    final featuredMediaUrl =
-        await WpApiService.fetchFeaturedMediaUrl(article.featuredMedia);
-    final authorName =
-        await WpApiService.fetchAuthorName(article.link, article.author);
-    final tagNames = await WpApiService.fetchTagNames(article.tags);
+    final results = await Future.wait([
+      WpApiService.resolveFeaturedMediaUrl(article),
+      WpApiService.resolveAuthorName(article),
+      WpApiService.fetchTagNames(article.tags),
+    ]);
 
     final savedArticle = SavedArticle.fromArticle(
       article,
       categoryName,
-      featuredMediaUrl: featuredMediaUrl,
-      authorName: authorName,
-      tagNames: tagNames,
+      featuredMediaUrl: results[0] as String,
+      authorName: results[1] as String,
+      tagNames: results[2] as List<String>,
     );
     await _box.put(article.id.toString(), savedArticle.toMap());
     _loadSavedArticles();

@@ -8,9 +8,55 @@
     "apiBase": "https://tcvappapi.jakefarrell.ie",
     "website": "https://thecollegeview.ie",
     "websiteDomain": "thecollegeview.ie",
+    "privacyPolicy": "https://thecollegeview.ie/the-college-view-mobile-app-privacy-policy",
     "instagram": "https://instagram.com/thecollegeview",
     "whatsapp": "https://chat.whatsapp.com/C8Rwkvo7h7k4STz79ICfHV",
     "imageProxy": "https://images.weserv.nl/?url="
-  }
+  },
+  "contacts": [
+    {
+      "title": "Editor-in-Chief: Katie O'Shaughnessy",
+      "emails": ["editor@thecollegeview.ie"]
+    },
+    {
+      "title": "Deputy Chief Editor: Leonor Selas Amaral",
+      "emails": ["deputyeditor@thecollegeview.ie"]
+    },
+    {
+      "title": "News: Annu Mandal & Adam Van Eekeren",
+      "emails": ["news@thecollegeview.ie"]
+    },
+    {
+      "title": "Opinions & Features: Ciara McGuinness, Erin Reel & Zoe Percival",
+      "emails": ["opinion@thecollegeview.ie", "features@thecollegeview.ie"]
+    },
+    {
+      "title": "Sports: Torna Mulconry, Ross Flanagan & Tiarnan O'Kelly",
+      "emails": ["sports@thecollegeview.ie"]
+    },
+    {
+      "title": "Lifestyle: Ruby Hegarty & Leah Doherty",
+      "emails": ["lifestyle@thecollegeview.ie"]
+    },
+    {
+      "title": "The Hype: Dylan Hand & Erica Elliott",
+      "emails": ["thehype@thecollegeview.ie"]
+    },
+    {
+      "title": "Satire & Cartoons: Ailish Connor & Shane Meleady",
+      "emails": ["satire@thecollegeview.ie"]
+    },
+    {
+      "title": "Irish & Lang: Harry Byrne & Aisling O'Kane",
+      "emails": ["gaeilge@thecollegeview.ie"]
+    },
+    {
+      "title": "E-paper Layout Editors and Sub-editors",
+      "emails": ["production@thecollegeview.ie"]
+    },
+    {
+      "title": "Webmaster: Jake Farrell",
+      "emails": ["webmaster@dcumps.ie"]
+    }
+  ]
 }
-

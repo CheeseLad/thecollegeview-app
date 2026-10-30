@@ -20,10 +20,36 @@ void main() {
       expect(config.apiBase, 'https://tcvappapi.jakefarrell.ie');
       expect(config.website, 'https://thecollegeview.ie');
       expect(config.websiteDomain, 'thecollegeview.ie');
+      expect(
+        config.privacyPolicyUrl,
+        'https://thecollegeview.ie/the-college-view-mobile-app-privacy-policy',
+      );
       expect(config.instagramUrl, 'https://instagram.com/thecollegeview');
       expect(config.whatsappUrl,
           'https://chat.whatsapp.com/C8Rwkvo7h7k4STz79ICfHV');
       expect(config.imageProxyUrl, 'https://images.weserv.nl/?url=');
+      expect(config.contacts, isNotEmpty);
+      expect(config.contacts.first.emails, contains('editor@thecollegeview.ie'));
+    });
+
+    test('AppConfig.fromJson parses custom contacts list', () {
+      final json = {
+        'contacts': [
+          {
+            'title': 'Editor: Jane Doe',
+            'emails': ['editor@example.com', 'info@example.com'],
+          },
+        ],
+      };
+
+      final config = AppConfig.fromJson(json);
+
+      expect(config.contacts.length, 1);
+      expect(config.contacts.first.title, 'Editor: Jane Doe');
+      expect(
+        config.contacts.first.emails,
+        ['editor@example.com', 'info@example.com'],
+      );
     });
 
     test('AppConfig.fromJson parses nested urls JSON structure', () {
@@ -36,6 +62,7 @@ void main() {
           'apiBase': 'https://api.custompaper.org',
           'website': 'https://custompaper.org',
           'websiteDomain': 'custompaper.org',
+          'privacyPolicy': 'https://custompaper.org/privacy',
           'instagram': 'https://instagram.com/custompaper',
           'whatsapp': 'https://chat.whatsapp.com/custom',
           'imageProxy': 'https://images.custom.org/?url='
@@ -51,6 +78,7 @@ void main() {
       expect(config.apiBase, 'https://api.custompaper.org');
       expect(config.website, 'https://custompaper.org');
       expect(config.websiteDomain, 'custompaper.org');
+      expect(config.privacyPolicyUrl, 'https://custompaper.org/privacy');
       expect(config.instagramUrl, 'https://instagram.com/custompaper');
       expect(config.whatsappUrl, 'https://chat.whatsapp.com/custom');
       expect(config.imageProxyUrl, 'https://images.custom.org/?url=');

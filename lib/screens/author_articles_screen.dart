@@ -122,87 +122,20 @@ class _AuthorArticlesScreenState extends State<AuthorArticlesScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadArticles,
-              child: _buildBody(context),
+              child: ArticleList(
+                categoryName: 'By ${widget.authorName}',
+                articles: _articles,
+                isLoading: _isLoading,
+                errorMessage: _error,
+                errorTitle: 'Failed to load author articles',
+                emptyMessage: 'No articles found for "${widget.authorName}"',
+                emptyIcon: Icons.article_outlined,
+                onRetry: _loadArticles,
+              ),
             ),
           ),
         ],
       ),
     );
   }
-
-  Widget _buildBody(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Failed to load author articles',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-                onPressed: _loadArticles,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_articles.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.article_outlined,
-                size: 64,
-                color: Theme.of(context).colorScheme.outline,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No articles found for "${widget.authorName}"',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return ArticleList(
-      categoryName: 'By ${widget.authorName}',
-      articles: _articles,
-    );
-  }
 }
-

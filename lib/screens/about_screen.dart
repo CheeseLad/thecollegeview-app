@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
-import '../config/app_urls.dart';
 import '../providers/page_content_provider.dart';
+import '../utils/deep_link_handler.dart';
 import '../widgets/cv_navigation_drawer.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -26,6 +25,8 @@ class _AboutScreenState extends State<AboutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final config = AppConfig.instance;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('About'),
@@ -54,9 +55,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
-                      pageContentProvider.fetchAboutContent();
-                    },
+                    onPressed: pageContentProvider.fetchAboutContent,
                     child: const Text('Retry'),
                   ),
                 ],
@@ -99,28 +98,15 @@ class _AboutScreenState extends State<AboutScreen> {
                             aboutContent.content,
                             textStyle:
                                 const TextStyle(fontSize: 16, height: 1.5),
-                            onTapUrl: (url) async {
-                              final uri = Uri.tryParse(url);
-                              if (uri != null && await canLaunchUrl(uri)) {
-                                await launchUrl(uri,
-                                    mode: LaunchMode.externalApplication);
-                                return true;
-                              }
-                              return false;
-                            },
+                            onTapUrl: (url) =>
+                                DeepLinkHandler.handleTappedUrl(context, url),
                           ),
                           const SizedBox(height: 24),
                           InkWell(
                             borderRadius: BorderRadius.circular(8),
-                            onTap: () async {
-                              final uri = Uri.tryParse(AppUrls.privacyPolicy);
-                              if (uri != null && await canLaunchUrl(uri)) {
-                                await launchUrl(
-                                  uri,
-                                  mode: LaunchMode.externalApplication,
-                                );
-                              }
-                            },
+                            onTap: () => DeepLinkHandler.launchExternalUrl(
+                              config.privacyPolicyUrl,
+                            ),
                             child: Padding(
                               padding:
                                   const EdgeInsets.symmetric(vertical: 6.0),
@@ -136,7 +122,7 @@ class _AboutScreenState extends State<AboutScreen> {
                                   const SizedBox(width: 8),
                                   Flexible(
                                     child: Text(
-                                      '${AppConfig.instance.appName} Mobile App Privacy Policy',
+                                      '${config.appName} Mobile App Privacy Policy',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
@@ -153,7 +139,7 @@ class _AboutScreenState extends State<AboutScreen> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            AppConfig.instance.copyrightNotice,
+                            config.copyrightNotice,
                             style: const TextStyle(
                               fontSize: 14,
                               fontStyle: FontStyle.italic,

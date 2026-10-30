@@ -6,6 +6,5 @@ class AppUrls {
   static String get websiteDomain => AppConfig.instance.websiteDomain;
   static String get instagram => AppConfig.instance.instagramUrl;
   static String get whatsapp => AppConfig.instance.whatsappUrl;
-  static String get privacyPolicy =>
-      '${AppConfig.instance.website}/the-college-view-mobile-app-privacy-policy';
+  static String get privacyPolicy => AppConfig.instance.privacyPolicyUrl;
 }

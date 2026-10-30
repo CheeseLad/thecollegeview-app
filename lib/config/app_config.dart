@@ -1,6 +1,35 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
+class ContactEntry {
+  final String title;
+  final List<String> emails;
+
+  const ContactEntry({
+    required this.title,
+    required this.emails,
+  });
+
+  factory ContactEntry.fromJson(Map<String, dynamic> json) {
+    final rawEmails = json['emails'];
+    final emails = rawEmails is List
+        ? rawEmails
+            .map((e) => e.toString().trim())
+            .where((e) => e.isNotEmpty)
+            .toList()
+        : <String>[];
+    return ContactEntry(
+      title: (json['title'] ?? '').toString().trim(),
+      emails: emails,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'emails': emails,
+      };
+}
+
 class AppConfig {
   static const String defaultAppName = 'The College View';
   static const String defaultAppDescription =
@@ -12,11 +41,60 @@ class AppConfig {
   static const String defaultApiBase = 'https://tcvappapi.jakefarrell.ie';
   static const String defaultWebsite = 'https://thecollegeview.ie';
   static const String defaultWebsiteDomain = 'thecollegeview.ie';
+  static const String defaultPrivacyPolicyPath =
+      '/the-college-view-mobile-app-privacy-policy';
   static const String defaultInstagramUrl =
       'https://instagram.com/thecollegeview';
   static const String defaultWhatsappUrl =
       'https://chat.whatsapp.com/C8Rwkvo7h7k4STz79ICfHV';
   static const String defaultImageProxyUrl = 'https://images.weserv.nl/?url=';
+
+  static const List<ContactEntry> defaultContacts = [
+    ContactEntry(
+      title: "Editor-in-Chief: Katie O'Shaughnessy",
+      emails: ['editor@thecollegeview.ie'],
+    ),
+    ContactEntry(
+      title: 'Deputy Chief Editor: Leonor Selas Amaral',
+      emails: ['deputyeditor@thecollegeview.ie'],
+    ),
+    ContactEntry(
+      title: 'News: Annu Mandal & Adam Van Eekeren',
+      emails: ['news@thecollegeview.ie'],
+    ),
+    ContactEntry(
+      title: 'Opinions & Features: Ciara McGuinness, Erin Reel & Zoe Percival',
+      emails: ['opinion@thecollegeview.ie', 'features@thecollegeview.ie'],
+    ),
+    ContactEntry(
+      title: "Sports: Torna Mulconry, Ross Flanagan & Tiarnan O'Kelly",
+      emails: ['sports@thecollegeview.ie'],
+    ),
+    ContactEntry(
+      title: 'Lifestyle: Ruby Hegarty & Leah Doherty',
+      emails: ['lifestyle@thecollegeview.ie'],
+    ),
+    ContactEntry(
+      title: 'The Hype: Dylan Hand & Erica Elliott',
+      emails: ['thehype@thecollegeview.ie'],
+    ),
+    ContactEntry(
+      title: 'Satire & Cartoons: Ailish Connor & Shane Meleady',
+      emails: ['satire@thecollegeview.ie'],
+    ),
+    ContactEntry(
+      title: "Irish & Lang: Harry Byrne & Aisling O'Kane",
+      emails: ['gaeilge@thecollegeview.ie'],
+    ),
+    ContactEntry(
+      title: 'E-paper Layout Editors and Sub-editors',
+      emails: ['production@thecollegeview.ie'],
+    ),
+    ContactEntry(
+      title: 'Webmaster: Jake Farrell',
+      emails: ['webmaster@dcumps.ie'],
+    ),
+  ];
 
   final String appName;
   final String appDescription;
@@ -26,9 +104,11 @@ class AppConfig {
   final String apiBase;
   final String website;
   final String websiteDomain;
+  final String? _privacyPolicyUrl;
   final String instagramUrl;
   final String whatsappUrl;
   final String imageProxyUrl;
+  final List<ContactEntry> contacts;
 
   const AppConfig({
     this.appName = defaultAppName,
@@ -39,10 +119,17 @@ class AppConfig {
     this.apiBase = defaultApiBase,
     this.website = defaultWebsite,
     this.websiteDomain = defaultWebsiteDomain,
+    String? privacyPolicyUrl,
     this.instagramUrl = defaultInstagramUrl,
     this.whatsappUrl = defaultWhatsappUrl,
     this.imageProxyUrl = defaultImageProxyUrl,
-  });
+    this.contacts = defaultContacts,
+  }) : _privacyPolicyUrl = privacyPolicyUrl;
+
+  String get privacyPolicyUrl =>
+      (_privacyPolicyUrl != null && _privacyPolicyUrl.isNotEmpty)
+          ? _privacyPolicyUrl
+          : '$website$defaultPrivacyPolicyPath';
 
   static const AppConfig defaults = AppConfig();
   static AppConfig _instance = defaults;
@@ -60,74 +147,92 @@ class AppConfig {
     _instance = defaults;
   }
 
+  static String _pickString(List<dynamic> candidates, String fallback) {
+    for (final value in candidates) {
+      if (value != null) {
+        final str = value.toString().trim();
+        if (str.isNotEmpty) return str;
+      }
+    }
+    return fallback;
+  }
+
   factory AppConfig.fromJson(Map<String, dynamic> json) {
     final urls = (json['urls'] as Map<String, dynamic>?) ?? {};
     final features = (json['features'] as Map<String, dynamic>?) ?? {};
 
-    final website = (json['website'] ?? urls['website'] ?? defaultWebsite)
-        .toString()
-        .trim();
+    final website = _pickString(
+      [json['website'], urls['website']],
+      defaultWebsite,
+    );
 
-    String parsedDomain = defaultWebsiteDomain;
-    if (json['websiteDomain'] != null) {
-      parsedDomain = json['websiteDomain'].toString().trim();
-    } else if (urls['websiteDomain'] != null) {
-      parsedDomain = urls['websiteDomain'].toString().trim();
-    } else {
-      final uri = Uri.tryParse(website);
-      if (uri != null && uri.host.isNotEmpty) {
-        parsedDomain = uri.host;
-      }
-    }
+    final derivedDomain = Uri.tryParse(website)?.host ?? '';
+    final parsedDomain = _pickString(
+      [
+        json['websiteDomain'],
+        urls['websiteDomain'],
+        if (derivedDomain.isNotEmpty) derivedDomain,
+      ],
+      defaultWebsiteDomain,
+    );
 
     final rawEnableAuthorTap =
         json['enableAuthorTap'] ?? features['enableAuthorTap'];
-    final bool enableAuthorTap = rawEnableAuthorTap is bool
-        ? rawEnableAuthorTap
-        : defaultEnableAuthorTap;
+
+    final rawContacts = json['contacts'];
+    final contacts = rawContacts is List
+        ? rawContacts
+            .whereType<Map<String, dynamic>>()
+            .map(ContactEntry.fromJson)
+            .where((c) => c.title.isNotEmpty)
+            .toList()
+        : defaultContacts;
+
+    final parsedPrivacyPolicy = _pickString(
+      [
+        json['privacyPolicyUrl'],
+        json['privacyPolicy'],
+        urls['privacyPolicy'],
+        urls['privacyPolicyUrl'],
+      ],
+      '',
+    );
 
     return AppConfig(
-      appName:
-          (json['appName'] ?? json['name'] ?? defaultAppName).toString().trim(),
-      appDescription: (json['appDescription'] ??
-              json['description'] ??
-              defaultAppDescription)
-          .toString()
-          .trim(),
-      fallbackAuthorName: (json['fallbackAuthorName'] ??
-              json['authorFallback'] ??
-              defaultFallbackAuthorName)
-          .toString()
-          .trim(),
-      enableAuthorTap: enableAuthorTap,
-      copyrightNotice: (json['copyrightNotice'] ??
-              json['copyright'] ??
-              defaultCopyrightNotice)
-          .toString()
-          .trim(),
-      apiBase: (json['apiBase'] ?? urls['apiBase'] ?? defaultApiBase)
-          .toString()
-          .trim(),
+      appName: _pickString([json['appName'], json['name']], defaultAppName),
+      appDescription: _pickString(
+        [json['appDescription'], json['description']],
+        defaultAppDescription,
+      ),
+      fallbackAuthorName: _pickString(
+        [json['fallbackAuthorName'], json['authorFallback']],
+        defaultFallbackAuthorName,
+      ),
+      enableAuthorTap: rawEnableAuthorTap is bool
+          ? rawEnableAuthorTap
+          : defaultEnableAuthorTap,
+      copyrightNotice: _pickString(
+        [json['copyrightNotice'], json['copyright']],
+        defaultCopyrightNotice,
+      ),
+      apiBase: _pickString([json['apiBase'], urls['apiBase']], defaultApiBase),
       website: website,
       websiteDomain: parsedDomain,
-      instagramUrl: (json['instagramUrl'] ??
-              urls['instagram'] ??
-              urls['instagramUrl'] ??
-              defaultInstagramUrl)
-          .toString()
-          .trim(),
-      whatsappUrl: (json['whatsappUrl'] ??
-              urls['whatsapp'] ??
-              urls['whatsappUrl'] ??
-              defaultWhatsappUrl)
-          .toString()
-          .trim(),
-      imageProxyUrl: (json['imageProxyUrl'] ??
-              urls['imageProxy'] ??
-              urls['imageProxyUrl'] ??
-              defaultImageProxyUrl)
-          .toString()
-          .trim(),
+      privacyPolicyUrl:
+          parsedPrivacyPolicy.isNotEmpty ? parsedPrivacyPolicy : null,
+      instagramUrl: _pickString(
+        [json['instagramUrl'], urls['instagram'], urls['instagramUrl']],
+        defaultInstagramUrl,
+      ),
+      whatsappUrl: _pickString(
+        [json['whatsappUrl'], urls['whatsapp'], urls['whatsappUrl']],
+        defaultWhatsappUrl,
+      ),
+      imageProxyUrl: _pickString(
+        [json['imageProxyUrl'], urls['imageProxy'], urls['imageProxyUrl']],
+        defaultImageProxyUrl,
+      ),
+      contacts: contacts.isNotEmpty ? contacts : defaultContacts,
     );
   }
 
@@ -142,10 +247,12 @@ class AppConfig {
         'apiBase': apiBase,
         'website': website,
         'websiteDomain': websiteDomain,
+        'privacyPolicy': privacyPolicyUrl,
         'instagram': instagramUrl,
         'whatsapp': whatsappUrl,
         'imageProxy': imageProxyUrl,
       },
+      'contacts': contacts.map((c) => c.toJson()).toList(),
     };
   }
 

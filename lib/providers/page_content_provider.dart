@@ -3,16 +3,13 @@ import 'package:flutter/material.dart';
 import '../models/page_content.dart';
 import '../services/wp_api_service.dart';
 import '../config/app_config.dart';
-import '../config/app_urls.dart';
 
 class PageContentProvider with ChangeNotifier {
   PageContent? _aboutContent;
-  ContactInfo? _contactInfo;
   bool _loading = false;
   String? _error;
 
   PageContent? get aboutContent => _aboutContent;
-  ContactInfo? get contactInfo => _contactInfo;
   bool get loading => _loading;
   String? get error => _error;
 
@@ -24,7 +21,7 @@ class PageContentProvider with ChangeNotifier {
     try {
       // Try to fetch from WordPress pages endpoint first
       final response = await WpApiService.get(
-        Uri.parse('${AppUrls.apiBase}/wp-json/wp/v2/pages?slug=about'),
+        Uri.parse('${AppConfig.instance.apiBase}/wp-json/wp/v2/pages?slug=about'),
       );
 
       if (response.statusCode == 200) {
@@ -32,51 +29,14 @@ class PageContentProvider with ChangeNotifier {
         if (data.isNotEmpty) {
           _aboutContent = PageContent.fromJson(data[0]);
         } else {
-          // Fallback to static content if no page found
           _aboutContent = _getStaticAboutContent();
         }
       } else {
-        // Fallback to static content on API error
         _aboutContent = _getStaticAboutContent();
       }
     } catch (e) {
       _error = e.toString();
-      // Fallback to static content on error
       _aboutContent = _getStaticAboutContent();
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> fetchContactInfo() async {
-    _loading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      // Try to fetch from WordPress pages endpoint first
-      final response = await WpApiService.get(
-        Uri.parse('${AppUrls.apiBase}/wp-json/wp/v2/pages?slug=contact'),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        if (data.isNotEmpty) {
-          // Parse contact info from page content
-          _contactInfo = _parseContactInfoFromContent(data[0]);
-        } else {
-          // Fallback to static contact info
-          _contactInfo = _getStaticContactInfo();
-        }
-      } else {
-        // Fallback to static contact info on API error
-        _contactInfo = _getStaticContactInfo();
-      }
-    } catch (e) {
-      _error = e.toString();
-      // Fallback to static contact info on error
-      _contactInfo = _getStaticContactInfo();
     } finally {
       _loading = false;
       notifyListeners();
@@ -102,41 +62,8 @@ class PageContentProvider with ChangeNotifier {
       ''',
       excerpt:
           'About ${AppConfig.instance.appName} - ${AppConfig.instance.appDescription}',
-      link: '${AppUrls.apiBase}/about/',
+      link: '${AppConfig.instance.apiBase}/about/',
       slug: 'about',
     );
-  }
-
-  ContactInfo _getStaticContactInfo() {
-    return ContactInfo(
-      editorInChief: 'Katie O\'Shaughnessy',
-      editorInChiefEmail: 'editor@${AppUrls.websiteDomain}',
-      deputyEditor: 'Leonor Selas Amaral',
-      deputyEditorEmail: 'deputyeditor@${AppUrls.websiteDomain}',
-      newsEditors: 'Annu Mandal & Adam Van Eekeren',
-      newsEmail: 'news@${AppUrls.websiteDomain}',
-      opinionFeaturesEditors: 'Ciara McGuinness, Erin Reel & Zoe Percival',
-      opinionEmail: 'opinion@${AppUrls.websiteDomain}',
-      featuresEmail: 'features@${AppUrls.websiteDomain}',
-      sportsEditors: 'Torna Mulconry, Ross Flanagan & Tiarnan O\'Kelly',
-      sportsEmail: 'sports@${AppUrls.websiteDomain}',
-      lifestyleEditors: 'Ruby Hegarty & Leah Doherty',
-      lifestyleEmail: 'lifestyle@${AppUrls.websiteDomain}',
-      hypeEditors: 'Dylan Hand & Erica Elliott',
-      hypeEmail: 'thehype@${AppUrls.websiteDomain}',
-      satireEditors: 'Ailish Connor & Shane Meleady',
-      satireEmail: 'satire@${AppUrls.websiteDomain}',
-      irishEditors: 'Harry Byrne & Aisling O\'Kane',
-      irishEmail: 'gaeilge@${AppUrls.websiteDomain}',
-      productionEmail: 'production@${AppUrls.websiteDomain}',
-      webmaster: 'Jake Farrell',
-      webmasterEmail: 'webmaster@dcumps.ie',
-    );
-  }
-
-  ContactInfo _parseContactInfoFromContent(Map<String, dynamic> pageData) {
-    // This would parse the contact information from the WordPress page content
-    // For now, return static data as fallback
-    return _getStaticContactInfo();
   }
 }

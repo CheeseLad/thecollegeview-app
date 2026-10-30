@@ -10,12 +10,22 @@ import '../widgets/network_image_with_fallback.dart';
 class ArticleList extends StatefulWidget {
   final String categoryName;
   final List<Article>? articles;
+  final bool? isLoading;
+  final String? errorMessage;
+  final String errorTitle;
+  final String? emptyMessage;
+  final IconData? emptyIcon;
   final VoidCallback? onRetry;
 
   const ArticleList({
     super.key,
     required this.categoryName,
     this.articles,
+    this.isLoading,
+    this.errorMessage,
+    this.errorTitle = 'Failed to load articles',
+    this.emptyMessage,
+    this.emptyIcon,
     this.onRetry,
   });
 
@@ -57,44 +67,20 @@ class _ArticleListState extends State<ArticleList> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.articles != null) {
-      final list = widget.articles!;
-      if (list.isEmpty) {
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.search_off, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
-                Text(
-                  'No articles found.',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-      return ListView.builder(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: list.length,
-        itemBuilder: (context, index) {
-          final article = list[index];
-          return ArticleCard(
-            key: ValueKey(article.id),
-            article: article,
-            categoryName: widget.categoryName,
-          );
-        },
-      );
+    final usesCustomList = widget.articles != null;
+    final articleProvider = usesCustomList
+        ? Provider.of<ArticleProvider>(context, listen: false)
+        : Provider.of<ArticleProvider>(context);
+
+    final list = widget.articles ?? articleProvider.articles;
+    final loading = widget.isLoading ?? (usesCustomList ? false : articleProvider.loading);
+    final error = widget.errorMessage ?? (usesCustomList ? null : articleProvider.error);
+
+    if (loading && list.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
     }
 
-    final articleProvider = Provider.of<ArticleProvider>(context);
-
-    if (articleProvider.error != null && articleProvider.articles.isEmpty) {
+    if (error != null && list.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -108,7 +94,7 @@ class _ArticleListState extends State<ArticleList> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Failed to load articles',
+                widget.errorTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -117,7 +103,7 @@ class _ArticleListState extends State<ArticleList> {
               ),
               const SizedBox(height: 8),
               Text(
-                articleProvider.error!,
+                error,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -128,13 +114,7 @@ class _ArticleListState extends State<ArticleList> {
               ElevatedButton.icon(
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
-                onPressed: () {
-                  if (widget.onRetry != null) {
-                    widget.onRetry!();
-                  } else {
-                    articleProvider.refreshArticles();
-                  }
-                },
+                onPressed: widget.onRetry ?? articleProvider.refreshArticles,
               ),
             ],
           ),
@@ -142,7 +122,14 @@ class _ArticleListState extends State<ArticleList> {
       );
     }
 
-    if (articleProvider.articles.isEmpty && !articleProvider.loading) {
+    if (list.isEmpty) {
+      final icon = widget.emptyIcon ??
+          (usesCustomList ? Icons.search_off : Icons.article_outlined);
+      final message = widget.emptyMessage ??
+          (usesCustomList
+              ? 'No articles found.'
+              : 'No articles available in this section.');
+
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
@@ -150,13 +137,13 @@ class _ArticleListState extends State<ArticleList> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.article_outlined,
+                icon,
                 size: 64,
                 color: Theme.of(context).colorScheme.outline,
               ),
               const SizedBox(height: 16),
               Text(
-                'No articles available in this section.',
+                message,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -169,19 +156,20 @@ class _ArticleListState extends State<ArticleList> {
       );
     }
 
+    final showBottomLoader = !usesCustomList && loading;
+
     return ListView.builder(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      itemCount:
-          articleProvider.articles.length + (articleProvider.loading ? 1 : 0),
+      itemCount: list.length + (showBottomLoader ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index >= articleProvider.articles.length) {
+        if (index >= list.length) {
           return const Padding(
             padding: EdgeInsets.all(16.0),
             child: Center(child: CircularProgressIndicator()),
           );
         }
-        final article = articleProvider.articles[index];
+        final article = list[index];
         return ArticleCard(
           key: ValueKey(article.id),
           article: article,
@@ -196,12 +184,18 @@ class ArticleCard extends StatefulWidget {
   final Article article;
   final String categoryName;
   final EdgeInsetsGeometry? margin;
+  final DateTime? savedAt;
+  final List<String>? tagNames;
+  final VoidCallback? onRemove;
 
   const ArticleCard({
     super.key,
     required this.article,
     required this.categoryName,
     this.margin,
+    this.savedAt,
+    this.tagNames,
+    this.onRemove,
   });
 
   @override
@@ -219,49 +213,22 @@ class _ArticleCardState extends State<ArticleCard>
   @override
   void initState() {
     super.initState();
-    final initialImageUrl = (widget.article.embeddedFeaturedMediaUrl != null &&
-            widget.article.embeddedFeaturedMediaUrl!.isNotEmpty)
-        ? widget.article.embeddedFeaturedMediaUrl!
-        : (WpApiService.getCachedFeaturedMediaUrl(
-                widget.article.featuredMedia) ??
-            '');
-
-    final initialAuthorName =
-        WpApiService.getCachedAuthorName(widget.article.link) ??
-            widget.article.embeddedAuthorName ??
-            '';
-
     _currentDetails = _CardDetails(
-      imageUrl: initialImageUrl,
-      authorName: initialAuthorName,
+      imageUrl: WpApiService.getInitialFeaturedMediaUrl(widget.article) ?? '',
+      authorName: WpApiService.getInitialAuthorName(widget.article) ?? '',
     );
-
     _detailsFuture = _loadDetails();
   }
 
   Future<_CardDetails> _loadDetails() async {
-    String imageUrl = _currentDetails.imageUrl;
-    String authorName = _currentDetails.authorName;
+    final results = await Future.wait([
+      WpApiService.resolveFeaturedMediaUrl(
+          widget.article, _currentDetails.imageUrl),
+      WpApiService.resolveAuthorName(
+          widget.article, _currentDetails.authorName),
+    ]);
 
-    final futures = <Future<void>>[];
-    if (imageUrl.isEmpty && widget.article.featuredMedia > 0) {
-      futures.add(
-        WpApiService.fetchFeaturedMediaUrl(widget.article.featuredMedia)
-            .then((url) => imageUrl = url),
-      );
-    }
-    if (authorName.isEmpty) {
-      futures.add(
-        WpApiService.fetchAuthorName(widget.article.link, widget.article.author)
-            .then((name) => authorName = name),
-      );
-    }
-
-    if (futures.isNotEmpty) {
-      await Future.wait(futures);
-    }
-
-    final details = _CardDetails(imageUrl: imageUrl, authorName: authorName);
+    final details = _CardDetails(imageUrl: results[0], authorName: results[1]);
     if (mounted) {
       _currentDetails = details;
     }
@@ -275,6 +242,13 @@ class _ArticleCardState extends State<ArticleCard>
     final String formattedDate = parsedDate != null
         ? '⏰ ${DateFormat('MMMM d, y').format(parsedDate)}'
         : '';
+    final String? savedDate = widget.savedAt != null
+        ? '💾 Saved ${DateFormat('MMM d, y').format(widget.savedAt!)}'
+        : null;
+    final subtextStyle = TextStyle(
+      fontSize: 13,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    );
 
     return Center(
       child: ConstrainedBox(
@@ -283,84 +257,84 @@ class _ArticleCardState extends State<ArticleCard>
           margin: widget.margin ??
               const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: FutureBuilder<_CardDetails>(
-        future: _detailsFuture,
-        initialData: _currentDetails,
-        builder: (context, snapshot) {
-          final details = snapshot.data ?? _currentDetails;
+            future: _detailsFuture,
+            initialData: _currentDetails,
+            builder: (context, snapshot) {
+              final details = snapshot.data ?? _currentDetails;
 
-          return InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ArticleDetailScreen(
-                  article: widget.article,
-                  categoryName: widget.categoryName,
-                  featuredMediaUrl: details.imageUrl,
-                  authorName: details.authorName,
-                ),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  NetworkImageWithFallback(
-                    imageUrl: details.imageUrl,
-                    fallbackAssetPath: 'assets/logo.png',
-                    width: 110,
-                    height: 110,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.article.title,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        if (formattedDate.isNotEmpty)
-                          Text(
-                            formattedDate,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                        if (details.authorName.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            '👤 ${details.authorName}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ],
+              return InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ArticleDetailScreen(
+                      article: widget.article,
+                      categoryName: widget.categoryName,
+                      featuredMediaUrl: details.imageUrl,
+                      authorName: details.authorName,
+                      tagNames: widget.tagNames,
                     ),
                   ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      NetworkImageWithFallback(
+                        imageUrl: details.imageUrl,
+                        fallbackAssetPath: 'assets/logo.png',
+                        width: 110,
+                        height: 110,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.article.title,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            if (formattedDate.isNotEmpty)
+                              Text(formattedDate, style: subtextStyle),
+                            if (savedDate != null) ...[
+                              const SizedBox(height: 4),
+                              Text(savedDate, style: subtextStyle),
+                            ],
+                            if (details.authorName.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                '👤 ${details.authorName}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: subtextStyle,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (widget.onRemove != null)
+                        IconButton(
+                          icon: Icon(
+                            Icons.bookmark,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          onPressed: widget.onRemove,
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

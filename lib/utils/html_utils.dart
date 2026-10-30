@@ -6,38 +6,11 @@ class HtmlUtils {
   ///
   /// This function handles both named entities (like &amp;, &lt;, &gt;)
   /// and numeric entities (like &#8216;, &#8217;, &#8220;, &#8221;)
-  ///
-  /// Examples:
-  /// - "&amp;" becomes "&"
-  /// - "&#8216;" becomes "'" (left single quotation mark)
-  /// - "&#8217;" becomes "'" (right single quotation mark)
-  /// - "&#8220;" becomes """ (left double quotation mark)
-  /// - "&#8221;" becomes """ (right double quotation mark)
-  /// - "&lt;" becomes "<"
-  /// - "&gt;" becomes ">"
-  /// - "&quot;" becomes "\""
-  /// - "&apos;" becomes "'"
-  /// - "&nbsp;" becomes " " (non-breaking space)
   static String decodeHtmlEntities(String htmlString) {
     if (htmlString.isEmpty) return htmlString;
 
     // Parse the HTML string and extract the text content
     // This automatically decodes all HTML entities
-    final document = html_parser.parse(htmlString);
-    final text = document.body?.text ?? htmlString;
-    return text
-        .replaceAll('‘', "'")
-        .replaceAll('’', "'")
-        .replaceAll('“', '"')
-        .replaceAll('”', '"');
-  }
-
-  /// Decodes HTML entities and strips HTML tags
-  ///
-  /// This is useful when you want plain text without any HTML formatting
-  static String decodeHtmlEntitiesAndStripTags(String htmlString) {
-    if (htmlString.isEmpty) return htmlString;
-
     final document = html_parser.parse(htmlString);
     final text = document.body?.text ?? htmlString;
     return text

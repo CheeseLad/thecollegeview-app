@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../config/app_urls.dart';
+import '../config/app_config.dart';
 import '../models/article.dart';
 import '../providers/article_provider.dart';
+import '../utils/deep_link_handler.dart';
 import 'article_detail_screen.dart';
 
 class DeepLinkArticleScreen extends StatefulWidget {
@@ -38,13 +38,13 @@ class _DeepLinkArticleScreenState extends State<DeepLinkArticleScreen> {
     });
   }
 
-  Uri _buildExternalUri() {
+  String _buildExternalUrl() {
     final raw = widget.urlOrPath.trim();
     if (raw.startsWith('http://') || raw.startsWith('https://')) {
-      return Uri.parse(raw);
+      return raw;
     }
     final cleanPath = raw.startsWith('/') ? raw : '/$raw';
-    return Uri.parse('${AppUrls.website}$cleanPath');
+    return '${AppConfig.instance.website}$cleanPath';
   }
 
   @override
@@ -86,12 +86,8 @@ class _DeepLinkArticleScreenState extends State<DeepLinkArticleScreen> {
               ElevatedButton.icon(
                 icon: const Icon(Icons.open_in_browser),
                 label: const Text('Open in Browser'),
-                onPressed: () async {
-                  final uri = _buildExternalUri();
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  }
-                },
+                onPressed: () =>
+                    DeepLinkHandler.launchExternalUrl(_buildExternalUrl()),
               ),
             ],
           ),
@@ -100,4 +96,3 @@ class _DeepLinkArticleScreenState extends State<DeepLinkArticleScreen> {
     );
   }
 }
-
