@@ -13,7 +13,7 @@
     "enableRelatedArticles": true,
     "enableTagChips": true,
     "enableShareButton": true,
-    "forceOfflineMode": true
+    "forceOfflineMode": false
   },
   "urls": {
     "apiBase": "https://tcvappapi.jakefarrell.ie",
