@@ -5,6 +5,7 @@ import '../providers/saved_articles_provider.dart';
 import '../models/saved_article.dart';
 import '../screens/article_detail_screen.dart';
 import '../services/wp_api_service.dart';
+import '../widgets/cv_navigation_drawer.dart';
 import '../widgets/network_image_with_fallback.dart';
 
 class SavedArticlesScreen extends StatelessWidget {
@@ -18,6 +19,7 @@ class SavedArticlesScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Saved Articles'),
       ),
+      drawer: const CVNavigationDrawer(),
       body: RefreshIndicator(
         onRefresh: () async {
           await savedArticlesProvider.refreshSavedArticles();
@@ -149,9 +151,12 @@ class _SavedArticleCardState extends State<_SavedArticleCard>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Card(
-      margin: const EdgeInsets.all(10),
-      child: FutureBuilder<_SavedCardDetails>(
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900),
+        child: Card(
+          margin: const EdgeInsets.all(10),
+          child: FutureBuilder<_SavedCardDetails>(
         future: _detailsFuture,
         initialData: _currentDetails,
         builder: (context, snapshot) {
@@ -238,6 +243,8 @@ class _SavedArticleCardState extends State<_SavedArticleCard>
             ),
           );
         },
+      ),
+        ),
       ),
     );
   }

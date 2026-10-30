@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../screens/articles_screen.dart';
 import '../screens/saved_articles_screen.dart';
 import '../screens/about_screen.dart';
@@ -77,6 +78,20 @@ class CVNavigationDrawer extends StatelessWidget {
                   leading: const Icon(Icons.contact_mail_outlined),
                   onTap: () {
                     _navigateTo(context, const ContactScreen());
+                  },
+                ),
+                ListTile(
+                  title: const Text('Privacy Policy'),
+                  leading: const Icon(Icons.privacy_tip_outlined),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final uri = Uri.tryParse(AppUrls.privacyPolicy);
+                    if (uri != null && await canLaunchUrl(uri)) {
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    }
                   },
                 ),
                 Consumer<ThemeProvider>(

@@ -276,10 +276,13 @@ class _ArticleCardState extends State<ArticleCard>
         ? '⏰ ${DateFormat('MMMM d, y').format(parsedDate)}'
         : '';
 
-    return Card(
-      margin: widget.margin ??
-          const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      child: FutureBuilder<_CardDetails>(
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900),
+        child: Card(
+          margin: widget.margin ??
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: FutureBuilder<_CardDetails>(
         future: _detailsFuture,
         initialData: _currentDetails,
         builder: (context, snapshot) {
@@ -357,6 +360,8 @@ class _ArticleCardState extends State<ArticleCard>
             ),
           );
         },
+      ),
+        ),
       ),
     );
   }

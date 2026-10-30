@@ -47,6 +47,8 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
 		<key>LSApplicationQueriesSchemes</key>
 		<array>
 			<string>https</string>

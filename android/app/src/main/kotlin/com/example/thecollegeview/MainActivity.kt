@@ -1,5 +1,1 @@
-package ie.thecollegeview.app
-
-import io.flutter.embedding.android.FlutterActivity
-
-class MainActivity: FlutterActivity()
+// Moved to ie/thecollegeview/app/MainActivity.kt

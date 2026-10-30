@@ -99,8 +99,6 @@ class PageContentProvider with ChangeNotifier {
         <p>The College View reserves the right to delete comments which it deems abusive. Such comments are deemed to be directly insulting, racist, sexist, xenophobic, or homophobic to other readers or its staff of journalists and writers.</p>
         
         <p>The College View welcomes criticism and opposing viewpoints through constructive and rational debate and wishes to create an atmosphere which encourages an open dialogue.</p>
-
-        <a href="${AppUrls.website}/the-college-view-mobile-app-privacy-policy" target="_blank">${AppConfig.instance.appName} Mobile App Privacy Policy</a>
       ''',
       excerpt:
           'About ${AppConfig.instance.appName} - ${AppConfig.instance.appDescription}',

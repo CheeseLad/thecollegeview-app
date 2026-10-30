@@ -147,13 +147,16 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: SingleChildScrollView(
-          child: SelectionArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: SingleChildScrollView(
+              child: SelectionArea(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                 Text(
                   widget.article.title,
                   style: const TextStyle(
@@ -248,13 +251,16 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                       if (mediaUrl.isNotEmpty) {
                         return Container(
                           margin: const EdgeInsets.only(bottom: 20),
-                          child: NetworkImageWithFallback(
-                            imageUrl: mediaUrl,
-                            fallbackAssetPath: 'assets/logo.png',
-                            width: double.infinity,
-                            height: 220,
-                            fit: BoxFit.cover,
-                            borderRadius: BorderRadius.circular(10),
+                          constraints: const BoxConstraints(maxHeight: 400),
+                          child: AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: NetworkImageWithFallback(
+                              imageUrl: mediaUrl,
+                              fallbackAssetPath: 'assets/logo.png',
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         );
                       } else if (snapshot.connectionState ==
@@ -454,7 +460,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                   article: widget.article,
                   categoryName: widget.categoryName,
                 ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),

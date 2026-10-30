@@ -4,6 +4,7 @@ import 'package:thecollegeview/models/category.dart';
 import 'package:thecollegeview/models/saved_article.dart';
 import 'package:thecollegeview/utils/html_utils.dart';
 import 'package:thecollegeview/services/wp_api_service.dart';
+import 'package:thecollegeview/config/app_urls.dart';
 
 void main() {
   group('Article Model Tests', () {
@@ -143,6 +144,13 @@ void main() {
       expect(WpApiService.getCachedAuthorName(url), 'John Journalist');
       final fetched = await WpApiService.fetchAuthorName(url);
       expect(fetched, 'John Journalist');
+    });
+
+    test('Privacy policy URL is properly configured', () {
+      expect(
+        AppUrls.privacyPolicy,
+        'https://thecollegeview.ie/the-college-view-mobile-app-privacy-policy',
+      );
     });
   });
 }

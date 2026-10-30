@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
+import '../config/app_urls.dart';
 import '../providers/page_content_provider.dart';
 import '../widgets/cv_navigation_drawer.dart';
 
@@ -108,7 +109,49 @@ class _AboutScreenState extends State<AboutScreen> {
                               return false;
                             },
                           ),
-                          const SizedBox(height: 30),
+                          const SizedBox(height: 24),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () async {
+                              final uri = Uri.tryParse(AppUrls.privacyPolicy);
+                              if (uri != null && await canLaunchUrl(uri)) {
+                                await launchUrl(
+                                  uri,
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              }
+                            },
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 6.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.privacy_tip_outlined,
+                                    size: 18,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      '${AppConfig.instance.appName} Mobile App Privacy Policy',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
                           Text(
                             AppConfig.instance.copyrightNotice,
                             style: const TextStyle(
