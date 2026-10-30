@@ -12,6 +12,9 @@ allprojects {
         google()
         mavenCentral()
     }
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs << "-Xlint:-options"
+    }
 }
 
 rootProject.buildDir = "../build"
