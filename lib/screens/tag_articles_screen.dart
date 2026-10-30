@@ -138,7 +138,7 @@ class _TagArticlesScreenState extends State<TagArticlesScreen> {
     }
 
     return ArticleList(
-      categoryName: 'Tag: ${widget.tag.name}',
+      categoryName: widget.tag.name,
       articles: _articles,
     );
   }

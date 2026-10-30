@@ -6,6 +6,7 @@ class AppConfig {
   static const String defaultAppDescription =
       "The College View - DCU's Independent Student Newspaper";
   static const String defaultFallbackAuthorName = 'The College View';
+  static const bool defaultEnableAuthorTap = false;
   static const String defaultCopyrightNotice =
       '© The College View 1999-2026 - Maintained by Jake Farrell';
   static const String defaultApiBase = 'https://tcvappapi.jakefarrell.ie';
@@ -20,6 +21,7 @@ class AppConfig {
   final String appName;
   final String appDescription;
   final String fallbackAuthorName;
+  final bool enableAuthorTap;
   final String copyrightNotice;
   final String apiBase;
   final String website;
@@ -32,6 +34,7 @@ class AppConfig {
     this.appName = defaultAppName,
     this.appDescription = defaultAppDescription,
     this.fallbackAuthorName = defaultFallbackAuthorName,
+    this.enableAuthorTap = defaultEnableAuthorTap,
     this.copyrightNotice = defaultCopyrightNotice,
     this.apiBase = defaultApiBase,
     this.website = defaultWebsite,
@@ -59,6 +62,7 @@ class AppConfig {
 
   factory AppConfig.fromJson(Map<String, dynamic> json) {
     final urls = (json['urls'] as Map<String, dynamic>?) ?? {};
+    final features = (json['features'] as Map<String, dynamic>?) ?? {};
 
     final website = (json['website'] ?? urls['website'] ?? defaultWebsite)
         .toString()
@@ -76,6 +80,12 @@ class AppConfig {
       }
     }
 
+    final rawEnableAuthorTap =
+        json['enableAuthorTap'] ?? features['enableAuthorTap'];
+    final bool enableAuthorTap = rawEnableAuthorTap is bool
+        ? rawEnableAuthorTap
+        : defaultEnableAuthorTap;
+
     return AppConfig(
       appName:
           (json['appName'] ?? json['name'] ?? defaultAppName).toString().trim(),
@@ -89,6 +99,7 @@ class AppConfig {
               defaultFallbackAuthorName)
           .toString()
           .trim(),
+      enableAuthorTap: enableAuthorTap,
       copyrightNotice: (json['copyrightNotice'] ??
               json['copyright'] ??
               defaultCopyrightNotice)
@@ -125,6 +136,7 @@ class AppConfig {
       'appName': appName,
       'appDescription': appDescription,
       'fallbackAuthorName': fallbackAuthorName,
+      'enableAuthorTap': enableAuthorTap,
       'copyrightNotice': copyrightNotice,
       'urls': {
         'apiBase': apiBase,

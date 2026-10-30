@@ -34,6 +34,7 @@ class NetworkImageWithFallback extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
+        filterQuality: FilterQuality.low,
         errorBuilder: (context, error, stackTrace) {
           return Icon(
             Icons.image_not_supported,
@@ -72,6 +73,7 @@ class NetworkImageWithFallback extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
+        filterQuality: FilterQuality.low,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(
@@ -98,6 +100,7 @@ class NetworkImageWithFallback extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
+        filterQuality: FilterQuality.low,
         fadeInDuration: Duration.zero,
         fadeOutDuration: Duration.zero,
         useOldImageOnUrlChange: true,

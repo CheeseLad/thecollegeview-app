@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-<uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="The College View"
         android:name="${applicationName}"
@@ -22,9 +22,24 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Enable Flutter built-in deep linking for Android App Links -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="true"
+              />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Android App Links for thecollegeview.ie -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="thecollegeview.ie" />
+                <data android:scheme="https" android:host="www.thecollegeview.ie" />
+                <data android:scheme="http" android:host="thecollegeview.ie" />
+                <data android:scheme="http" android:host="www.thecollegeview.ie" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

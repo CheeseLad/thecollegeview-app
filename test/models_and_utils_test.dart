@@ -3,8 +3,11 @@ import 'package:thecollegeview/models/article.dart';
 import 'package:thecollegeview/models/category.dart';
 import 'package:thecollegeview/models/saved_article.dart';
 import 'package:thecollegeview/utils/html_utils.dart';
+import 'package:thecollegeview/utils/deep_link_handler.dart';
 import 'package:thecollegeview/services/wp_api_service.dart';
+import 'package:thecollegeview/config/app_config.dart';
 import 'package:thecollegeview/config/app_urls.dart';
+import 'package:thecollegeview/theme/app_theme.dart';
 
 void main() {
   group('Article Model Tests', () {
@@ -151,6 +154,53 @@ void main() {
         AppUrls.privacyPolicy,
         'https://thecollegeview.ie/the-college-view-mobile-app-privacy-policy',
       );
+    });
+  });
+
+  group('Reader Font Size & Deep Link Tests', () {
+    test('ThemeProvider clamps and labels articleFontSize accurately', () {
+      final themeProvider = ThemeProvider();
+      expect(themeProvider.articleFontSize, 16.0);
+      expect(themeProvider.articleFontSizeLabel, 'Medium');
+
+      themeProvider.setArticleFontSize(14.0);
+      expect(themeProvider.articleFontSize, 14.0);
+      expect(themeProvider.articleFontSizeLabel, 'Small');
+
+      themeProvider.setArticleFontSize(19.0);
+      expect(themeProvider.articleFontSize, 19.0);
+      expect(themeProvider.articleFontSizeLabel, 'Large');
+
+      themeProvider.setArticleFontSize(30.0);
+      expect(themeProvider.articleFontSize, ThemeProvider.maxFontSize);
+      expect(themeProvider.articleFontSizeLabel, 'Extra Large');
+    });
+
+    test('DeepLinkHandler recognizes internal website domains and privacy policy', () {
+      expect(DeepLinkHandler.isInternalWebsiteHost('thecollegeview.ie'), isTrue);
+      expect(DeepLinkHandler.isInternalWebsiteHost('www.thecollegeview.ie'), isTrue);
+      expect(DeepLinkHandler.isInternalWebsiteHost('google.com'), isFalse);
+
+      expect(
+        DeepLinkHandler.isPrivacyPolicyPath(
+          Uri.parse('https://thecollegeview.ie/the-college-view-mobile-app-privacy-policy'),
+        ),
+        isTrue,
+      );
+      expect(
+        DeepLinkHandler.isPrivacyPolicyPath(
+          Uri.parse('https://thecollegeview.ie/2026/10/sample-article/'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('AppConfig enableAuthorTap defaults to false and parses from JSON', () {
+      expect(AppConfig.defaults.enableAuthorTap, isFalse);
+      final enabledConfig = AppConfig.fromJson({'enableAuthorTap': true});
+      expect(enabledConfig.enableAuthorTap, isTrue);
+      final disabledConfig = AppConfig.fromJson({'enableAuthorTap': false});
+      expect(disabledConfig.enableAuthorTap, isFalse);
     });
   });
 }

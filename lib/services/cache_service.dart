@@ -3,7 +3,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class CacheService {
   static const String _boxName = 'apiCache';
-  static const int _ttlMs = 3600000;
+  static const int _freshTtlMs = 3600000; // 1 hour fresh cache
+  static const int _maxStaleTtlMs = 604800000; // 7 days offline fallback cache
   static final CacheService _instance = CacheService._internal();
   late Box<Map> _box;
 
@@ -20,7 +21,7 @@ class CacheService {
     _clearExpired();
   }
 
-  http.Response? getCached(Uri uri) {
+  http.Response? getCached(Uri uri, {bool allowStale = false}) {
     if (!_box.isOpen) return null;
     final key = uri.toString();
     final entry = _box.get(key);
@@ -33,15 +34,23 @@ class CacheService {
       return null;
     }
 
-    if (DateTime.now().millisecondsSinceEpoch - timestamp > _ttlMs) {
+    final ageMs = DateTime.now().millisecondsSinceEpoch - timestamp;
+    if (ageMs > _maxStaleTtlMs) {
       _box.delete(key);
+      return null;
+    }
+
+    if (!allowStale && ageMs > _freshTtlMs) {
       return null;
     }
 
     final body = entry['body'] as String? ?? '';
     final statusCode = entry['statusCode'] as int? ?? 0;
     final headersMap = entry['headers'] as Map?;
-    final headers = headersMap?.cast<String, String>() ?? <String, String>{};
+    final headers = <String, String>{
+      ...(headersMap?.cast<String, String>() ?? <String, String>{}),
+      if (ageMs > _freshTtlMs) 'x-cache-stale': 'true',
+    };
 
     return http.Response(body, statusCode, headers: headers);
   }
@@ -67,7 +76,7 @@ class CacheService {
       if (entry == null) continue;
 
       final timestamp = entry['timestamp'] as int?;
-      if (timestamp == null || now - timestamp > _ttlMs) {
+      if (timestamp == null || now - timestamp > _maxStaleTtlMs) {
         keysToDelete.add(key);
       }
     }

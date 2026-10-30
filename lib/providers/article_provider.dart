@@ -117,7 +117,7 @@ class ArticleProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchArticles() async {
+  Future<void> fetchArticles({bool forceRefresh = false}) async {
     _loading = true;
     notifyListeners();
 
@@ -127,7 +127,10 @@ class ArticleProvider with ChangeNotifier {
     final url =
         '${AppUrls.apiBase}/wp-json/wp/v2/posts/?page=$_currentPage&per_page=10$categoryFilter$tagFilter&_fields=id,date,title,content,link,author,featured_media,tags,_links,_embedded&_embed=author,wp:featuredmedia';
     try {
-      final response = await WpApiService.get(Uri.parse(url));
+      final response = await WpApiService.get(
+        Uri.parse(url),
+        forceRefresh: forceRefresh,
+      );
       if (response.statusCode == 200) {
         List<Article> loadedArticles = (json.decode(response.body) as List)
             .map((data) => Article.fromJson(data))
@@ -181,6 +184,134 @@ class ArticleProvider with ChangeNotifier {
     return [];
   }
 
+  Future<List<Article>> getArticlesByAuthor(
+    String authorName, {
+    int? authorId,
+  }) async {
+    var cleanName = authorName.trim();
+    if (cleanName.toLowerCase().startsWith('by ')) {
+      cleanName = cleanName.substring(3).trim();
+    }
+    if (cleanName.isEmpty) return [];
+
+    final Map<int, Article> articlesById = {};
+
+    // 1. Search posts matching the writer's name
+    final searchResults = await searchArticles(cleanName);
+    for (final article in searchResults) {
+      articlesById[article.id] = article;
+    }
+
+    // 2. If a specific WordPress author ID is available and cleanName isn't the generic fallback,
+    // also check posts by that WP author ID if their embedded author name matches.
+    if (authorId != null &&
+        authorId > 0 &&
+        cleanName.toLowerCase() !=
+            WpApiService.fallbackAuthorName.toLowerCase()) {
+      try {
+        final url =
+            '${AppUrls.apiBase}/wp-json/wp/v2/posts?author=$authorId&per_page=20&_fields=id,date,title,content,link,author,featured_media,tags,_links,_embedded&_embed=author,wp:featuredmedia';
+        final response = await WpApiService.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final List<dynamic> data = json.decode(response.body);
+          for (final item in data) {
+            if (item is Map<String, dynamic>) {
+              final embedded = item['_embedded'];
+              String wpUserName = '';
+              if (embedded is Map &&
+                  embedded['author'] is List &&
+                  (embedded['author'] as List).isNotEmpty &&
+                  embedded['author'][0] is Map) {
+                wpUserName =
+                    embedded['author'][0]['name']?.toString().trim() ?? '';
+              }
+              if (wpUserName.toLowerCase() == cleanName.toLowerCase()) {
+                final parsed = Article.fromJson(item);
+                WpApiService.cacheAuthorName(parsed.link, cleanName);
+                articlesById[parsed.id] = parsed;
+              }
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    final combined = articlesById.values.toList();
+    combined.sort((a, b) => b.date.compareTo(a.date));
+    return combined;
+  }
+
+  /// Resolves an article from a Universal Link / App Link URL or path.
+  /// Supports `/?p=123` post IDs as well as `/2026/10/post-slug/` permalinks.
+  Future<Article?> fetchArticleBySlugOrUrl(String urlOrPath) async {
+    final trimmed = urlOrPath.trim();
+    if (trimmed.isEmpty) return null;
+
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null) return null;
+
+    // 1. Check query parameter ?p=<id>
+    final postIdParam = uri.queryParameters['p'];
+    if (postIdParam != null) {
+      final postId = int.tryParse(postIdParam);
+      if (postId != null && postId > 0) {
+        return fetchArticleById(postId);
+      }
+    }
+
+    // 2. Extract slug from the last non-empty path segment
+    final segments =
+        uri.pathSegments.where((segment) => segment.trim().isNotEmpty).toList();
+    if (segments.isEmpty) return null;
+
+    final lastSegment = segments.last.trim().toLowerCase();
+    const nonArticleSlugs = {
+      'about',
+      'contact',
+      'category',
+      'tag',
+      'author',
+      'search',
+      'wp-admin',
+      'wp-login.php',
+      'feed',
+    };
+    if (nonArticleSlugs.contains(lastSegment)) {
+      return null;
+    }
+
+    // Check if already in memory
+    for (final existing in _articles) {
+      final existingUri = Uri.tryParse(existing.link);
+      if (existingUri != null) {
+        final existingSegments = existingUri.pathSegments
+            .where((s) => s.trim().isNotEmpty)
+            .toList();
+        if (existingSegments.isNotEmpty &&
+            existingSegments.last.toLowerCase() == lastSegment) {
+          return existing;
+        }
+      }
+    }
+
+    try {
+      final encodedSlug = Uri.encodeQueryComponent(lastSegment);
+      final response = await WpApiService.get(
+        Uri.parse(
+          '${AppUrls.apiBase}/wp-json/wp/v2/posts?slug=$encodedSlug&_fields=id,date,title,content,link,author,featured_media,tags,_links,_embedded&_embed=author,wp:featuredmedia',
+        ),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data is List && data.isNotEmpty && data[0] is Map<String, dynamic>) {
+          return Article.fromJson(data[0] as Map<String, dynamic>);
+        }
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
   void nextPage() {
     if (_loading) return;
     if (_currentPage < _totalPages) {
@@ -210,7 +341,7 @@ class ArticleProvider with ChangeNotifier {
   Future<void> refreshArticles() async {
     _currentPage = 1;
     _pageSizes = [];
-    await fetchArticles();
+    await fetchArticles(forceRefresh: true);
   }
 
   Future<void> fetchTags() async {

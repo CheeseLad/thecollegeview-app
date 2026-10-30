@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import '../config/app_config.dart';
 import '../models/article.dart';
 import '../models/tag.dart';
 import '../providers/article_provider.dart';
 import '../providers/saved_articles_provider.dart';
+import '../theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../services/wp_api_service.dart';
+import '../utils/deep_link_handler.dart';
 import '../widgets/network_image_with_fallback.dart';
 import '../widgets/article_list.dart';
+import '../widgets/fullscreen_image_viewer.dart';
+import '../widgets/offline_banner.dart';
+import 'author_articles_screen.dart';
 import 'tag_articles_screen.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
@@ -78,6 +84,117 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     return await WpApiService.fetchTagNames(widget.article.tags);
   }
 
+  void _showFontSizeSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, _) {
+            const presets = <String, double>{
+              'Small': 14.0,
+              'Medium': 16.0,
+              'Large': 19.0,
+              'Extra Large': 22.0,
+            };
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Reader Font Size',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '${themeProvider.articleFontSize.round()} pt (${themeProvider.articleFontSizeLabel})',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: presets.entries.map((entry) {
+                        final isSelected =
+                            (themeProvider.articleFontSize - entry.value)
+                                    .abs() <
+                                0.5;
+                        return ChoiceChip(
+                          label: Text(entry.key),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            themeProvider.setArticleFontSize(entry.value);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Text('A', style: TextStyle(fontSize: 13)),
+                        Expanded(
+                          child: Slider(
+                            value: themeProvider.articleFontSize,
+                            min: ThemeProvider.minFontSize,
+                            max: ThemeProvider.maxFontSize,
+                            divisions: 11,
+                            label: '${themeProvider.articleFontSize.round()}',
+                            onChanged: (value) {
+                              themeProvider.setArticleFontSize(value);
+                            },
+                          ),
+                        ),
+                        const Text(
+                          'A',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _openAuthorArticles(String authorName) {
+    final trimmed = authorName.trim();
+    if (trimmed.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AuthorArticlesScreen(
+          authorName: trimmed,
+          authorId: widget.article.author,
+        ),
+      ),
+    );
+  }
+
   Future<void> _shareArticle() async {
     final link = widget.article.link.trim();
     if (link.isEmpty) return;
@@ -114,6 +231,49 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     }
   }
 
+  Widget _buildTappableAuthorChip(BuildContext context, String author) {
+    if (!AppConfig.instance.enableAuthorTap) {
+      return Text(
+        '👤 $author',
+        style: TextStyle(
+          fontSize: 16,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      );
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => _openAuthorArticles(author),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                '👤 $author',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.primary,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: colorScheme.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final parsedDate = DateTime.tryParse(widget.article.date);
@@ -121,13 +281,26 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         ? '⏰ ${DateFormat('MMMM d, y').format(parsedDate)}'
         : '';
     final savedArticlesProvider = Provider.of<SavedArticlesProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
+      backgroundColor: AppTheme.articleDetailBackgroundColor(context),
       appBar: AppBar(
         title: Text(widget.article.title),
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.format_size),
+            tooltip: 'Text size',
+            onPressed: () => _showFontSizeSheet(context),
+          ),
+          IconButton(
+            key: _shareButtonKey,
+            icon: const FaIcon(FontAwesomeIcons.arrowUpFromBracket, size: 19),
+            tooltip: 'Share',
+            onPressed: _shareArticle,
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 4.0),
             child: IconButton(
@@ -147,315 +320,295 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Padding(
-            padding: const EdgeInsets.all(15.0),
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(
             child: SingleChildScrollView(
               child: SelectionArea(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                Text(
-                  widget.article.title,
-                  style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (formattedDate.isNotEmpty)
-                      Text(formattedDate,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          )),
-                    FutureBuilder<String>(
-                      future: _authorNameFuture,
-                      builder: (context, snapshot) {
-                        final author = snapshot.data ??
-                            widget.authorName ??
-                            WpApiService.getCachedAuthorName(
-                                widget.article.link) ??
-                            '';
-                        if (author.isEmpty) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            );
-                          }
-                          return Text(
-                            '👤 ${WpApiService.fallbackAuthorName}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          );
-                        }
-                        return Text(
-                          '👤 $author',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        );
-                      },
-                    ),
-                    Text(
-                      '📂 ${widget.categoryName}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-                // Show tag on a new line if viewing tagged articles
-                if (widget.categoryName.startsWith('Tag: ')) ...[
-                  const SizedBox(height: 5),
-                  Row(
-                    children: [
-                      const Text('🏷️ '),
-                      Text(
-                        () {
-                          final tagName = widget.categoryName.substring(5);
-                          return tagName.isEmpty
-                              ? tagName
-                              : tagName[0].toUpperCase() + tagName.substring(1);
-                        }(),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 10),
-                // Display featured media if available
-                if (widget.article.featuredMedia > 0 ||
-                    (widget.article.embeddedFeaturedMediaUrl != null &&
-                        widget.article.embeddedFeaturedMediaUrl!.isNotEmpty))
-                  FutureBuilder<String>(
-                    future: _featuredMediaUrlFuture,
-                    builder: (context, snapshot) {
-                      final mediaUrl = snapshot.data ??
-                          widget.featuredMediaUrl ??
-                          widget.article.embeddedFeaturedMediaUrl ??
-                          '';
-                      if (mediaUrl.isNotEmpty) {
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 20),
-                          constraints: const BoxConstraints(maxHeight: 400),
-                          child: AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: NetworkImageWithFallback(
-                              imageUrl: mediaUrl,
-                              fallbackAssetPath: 'assets/logo.png',
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        );
-                      } else if (snapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return Container(
-                          width: double.infinity,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                HtmlWidget(
-                  widget.article.content,
-                  renderMode: RenderMode.column,
-                  textStyle: const TextStyle(fontSize: 16),
-                  onTapUrl: (url) async {
-                    final uri = Uri.tryParse(url);
-                    if (uri != null && await canLaunchUrl(uri)) {
-                      await launchUrl(uri,
-                          mode: LaunchMode.externalApplication);
-                      return true;
-                    }
-                    return false;
-                  },
-                  customStylesBuilder: (element) {
-                    if (element.localName == 'img') {
-                      return {
-                        'border-radius': '10px',
-                      };
-                    }
-                    return null;
-                  },
-                  customWidgetBuilder: (element) {
-                    if (element.localName == 'img') {
-                      final src = element.attributes['src'];
-                      if (src != null && src.isNotEmpty) {
-                        return NetworkImageWithFallback(
-                          imageUrl: src,
-                          fallbackAssetPath: 'assets/logo.png',
-                          borderRadius: BorderRadius.circular(10),
-                        );
-                      }
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 10),
-                // Display tags if available
-                if (widget.article.tags.isNotEmpty) ...[
-                  FutureBuilder<List<String>>(
-                    future: _tagNamesFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const SizedBox.shrink();
-                      } else if (snapshot.hasData &&
-                          snapshot.data!.isNotEmpty) {
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 20),
-                          child: Column(
+                    Container(
+                      color: AppTheme.articleDetailBackgroundColor(context),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 900),
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(15.0, 15.0, 15.0, 20.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.article.title,
+                                  style: TextStyle(
+                                    fontSize: themeProvider.articleFontSize + 8,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                          const SizedBox(height: 10),
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              //const Text(
-                              //  'Tags:',
-                              //  style: TextStyle(
-                              //    fontSize: 16,
-                              //    fontWeight: FontWeight.bold,
-                              //    color: Colors.grey,
-                              //  ),
-                              //),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 8.0,
-                                runSpacing: 4.0,
-                                children:
-                                    snapshot.data!.asMap().entries.map((entry) {
-                                  final index = entry.key;
-                                  final tagName = entry.value;
-                                  final tagId = widget.article.tags[index];
-
-                                  return GestureDetector(
-                                    onTap: () async {
-                                      // Create a Tag object for navigation
-                                      final tag = Tag(
-                                        id: tagId,
-                                        name: tagName,
-                                        slug: tagName
-                                            .toLowerCase()
-                                            .replaceAll(' ', '-'),
-                                        description: '',
-                                        count: 0,
+                              if (formattedDate.isNotEmpty)
+                                Text(
+                                  formattedDate,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                ),
+                              FutureBuilder<String>(
+                                future: _authorNameFuture,
+                                builder: (context, snapshot) {
+                                  final author = snapshot.data ??
+                                      widget.authorName ??
+                                      WpApiService.getCachedAuthorName(
+                                          widget.article.link) ??
+                                      '';
+                                  if (author.isEmpty) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
                                       );
-
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              TagArticlesScreen(tag: tag),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primaryContainer,
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            tagName,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onPrimaryContainer,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Icon(
-                                            Icons.arrow_forward_ios,
-                                            size: 12,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onPrimaryContainer,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                    }
+                                    return _buildTappableAuthorChip(
+                                      context,
+                                      WpApiService.fallbackAuthorName,
+                                    );
+                                  }
+                                  return _buildTappableAuthorChip(
+                                    context,
+                                    author,
                                   );
-                                }).toList(),
+                                },
+                              ),
+                              Text(
+                                '📂 ${widget.categoryName.replaceFirst(RegExp(r'^Tag:\s*', caseSensitive: false), '')}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    },
-                  ),
-                ] else ...[
-                  const SizedBox.shrink(),
-                ],
-                InkWell(
-                  key: _shareButtonKey,
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: _shareArticle,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                          color: Theme.of(context).colorScheme.outline,
-                          width: 1.0),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.share),
-                        SizedBox(width: 8.0),
-                        Text(
-                          "Share",
-                          style: TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 10),
+                          // Display featured media if available (tap to fullscreen zoom)
+                          if (widget.article.featuredMedia > 0 ||
+                              (widget.article.embeddedFeaturedMediaUrl !=
+                                      null &&
+                                  widget.article.embeddedFeaturedMediaUrl!
+                                      .isNotEmpty))
+                            FutureBuilder<String>(
+                              future: _featuredMediaUrlFuture,
+                              builder: (context, snapshot) {
+                                final mediaUrl = snapshot.data ??
+                                    widget.featuredMediaUrl ??
+                                    widget.article.embeddedFeaturedMediaUrl ??
+                                    '';
+                                if (mediaUrl.isNotEmpty) {
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 20),
+                                    child: GestureDetector(
+                                      onTap: () => FullscreenImageViewer.show(
+                                        context,
+                                        imageUrl: mediaUrl,
+                                        caption: widget.article.title,
+                                      ),
+                                      child: NetworkImageWithFallback(
+                                        imageUrl: mediaUrl,
+                                        fallbackAssetPath: 'assets/logo.png',
+                                        width: double.infinity,
+                                        height: 220,
+                                        fit: BoxFit.cover,
+                                        borderRadius:
+                                            BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  );
+                                } else if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Container(
+                                    width: double.infinity,
+                                    height: 200,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                          HtmlWidget(
+                            widget.article.content,
+                            renderMode: RenderMode.column,
+                            textStyle: TextStyle(
+                              fontSize: themeProvider.articleFontSize,
+                              height: 1.5,
+                            ),
+                            onTapUrl: (url) =>
+                                DeepLinkHandler.handleTappedUrl(context, url),
+                            customStylesBuilder: (element) {
+                              if (element.localName == 'img') {
+                                return {
+                                  'border-radius': '10px',
+                                };
+                              }
+                              return null;
+                            },
+                            customWidgetBuilder: (element) {
+                              if (element.localName == 'img') {
+                                final src = element.attributes['src'];
+                                final alt = element.attributes['alt'];
+                                if (src != null && src.isNotEmpty) {
+                                  return GestureDetector(
+                                    onTap: () => FullscreenImageViewer.show(
+                                      context,
+                                      imageUrl: src,
+                                      caption: alt,
+                                    ),
+                                    child: NetworkImageWithFallback(
+                                      imageUrl: src,
+                                      fallbackAssetPath: 'assets/logo.png',
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  );
+                                }
+                              }
+                              return null;
+                            },
                           ),
+                          const SizedBox(height: 10),
+                          // Display tags if available
+                          if (widget.article.tags.isNotEmpty) ...[
+                            FutureBuilder<List<String>>(
+                              future: _tagNamesFuture,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const SizedBox.shrink();
+                                } else if (snapshot.hasData &&
+                                    snapshot.data!.isNotEmpty) {
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 20),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 8),
+                                        Wrap(
+                                          spacing: 8.0,
+                                          runSpacing: 4.0,
+                                          children: snapshot.data!
+                                              .asMap()
+                                              .entries
+                                              .map((entry) {
+                                            final index = entry.key;
+                                            final tagName = entry.value;
+                                            final tagId =
+                                                widget.article.tags[index];
+
+                                            return GestureDetector(
+                                              onTap: () async {
+                                                final tag = Tag(
+                                                  id: tagId,
+                                                  name: tagName,
+                                                  slug: tagName
+                                                      .toLowerCase()
+                                                      .replaceAll(' ', '-'),
+                                                  description: '',
+                                                  count: 0,
+                                                );
+
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        TagArticlesScreen(
+                                                            tag: tag),
+                                                  ),
+                                                );
+                                              },
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 6,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primaryContainer,
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  border: Border.all(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      tagName,
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onPrimaryContainer,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Icon(
+                                                      Icons.arrow_forward_ios,
+                                                      size: 12,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onPrimaryContainer,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  return const SizedBox.shrink();
+                                }
+                              },
+                            ),
+                          ] else ...[
+                            const SizedBox.shrink(),
+                          ],
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
                 _RelatedArticlesSection(
                   article: widget.article,
                   categoryName: widget.categoryName,
@@ -465,7 +618,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -511,23 +664,56 @@ class _RelatedArticlesSectionState extends State<_RelatedArticlesSection> {
         }
         final related = snapshot.data!;
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Related Articles',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
+            Container(
+              color: AppTheme.articleDetailBackgroundColor(context),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Related Articles',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 10),
-            ...related.map((relatedArticle) => ArticleCard(
-                  key: ValueKey(relatedArticle.id),
-                  article: relatedArticle,
-                  categoryName: widget.categoryName,
-                  margin: const EdgeInsets.only(bottom: 10),
-                ))
+            //Container(
+            //  width: double.infinity,
+            //  height: 2,
+            //  color: Theme.of(context).colorScheme.onSurface,
+            //),
+            Container(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              padding: const EdgeInsets.fromLTRB(15.0, 12.0, 15.0, 20.0),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...related.map((relatedArticle) => ArticleCard(
+                            key: ValueKey(relatedArticle.id),
+                            article: relatedArticle,
+                            categoryName: widget.categoryName,
+                            margin: const EdgeInsets.only(bottom: 10),
+                          )),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         );
       },

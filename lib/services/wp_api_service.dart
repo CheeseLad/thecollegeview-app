@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../config/app_urls.dart';
@@ -11,6 +12,10 @@ class WpApiService {
   static String get _authorInfoEndpoint => '${AppUrls.apiBase}/get-subheading';
 
   static final CacheService _cache = CacheService();
+
+  /// Reactive indicator of whether the most recent network request failed and
+  /// fell back to offline/cached mode.
+  static final ValueNotifier<bool> isOffline = ValueNotifier<bool>(false);
 
   static final Map<int, String> _mediaUrlMemoryCache = {};
   static final Map<String, String> _authorMemoryCache = {};
@@ -40,17 +45,44 @@ class WpApiService {
   static Future<http.Response> get(
     Uri uri, {
     Map<String, String>? headers,
+    bool forceRefresh = false,
   }) async {
-    final cached = _cache.getCached(uri);
-    if (cached != null) {
-      return cached;
+    if (!forceRefresh) {
+      final cached = _cache.getCached(uri, allowStale: false);
+      if (cached != null) {
+        return cached;
+      }
     }
 
-    final response = await http.get(uri, headers: headers);
-    if (response.statusCode == 200) {
-      await _cache.setCached(uri, response);
+    try {
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 12));
+      if (response.statusCode == 200) {
+        if (isOffline.value) {
+          isOffline.value = false;
+        }
+        await _cache.setCached(uri, response);
+        return response;
+      }
+
+      // On server errors, fall back to stale cache if available
+      if (response.statusCode >= 500) {
+        final stale = _cache.getCached(uri, allowStale: true);
+        if (stale != null) {
+          isOffline.value = true;
+          return stale;
+        }
+      }
+      return response;
+    } catch (_) {
+      isOffline.value = true;
+      final stale = _cache.getCached(uri, allowStale: true);
+      if (stale != null) {
+        return stale;
+      }
+      rethrow;
     }
-    return response;
   }
 
   static Future<String> fetchAuthorInfo(

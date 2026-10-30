@@ -1,0 +1,34 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "REPLACE_WITH_APPLE_TEAM_ID.ie.thecollegeview.app"
+        ],
+        "components": [
+          {
+            "/": "/*",
+            "comment": "Matches all article and page paths on thecollegeview.ie"
+          },
+          {
+            "/": "/wp-admin/*",
+            "exclude": true,
+            "comment": "Excludes WordPress admin paths"
+          },
+          {
+            "/": "/wp-login.php",
+            "exclude": true,
+            "comment": "Excludes WordPress login"
+          },
+          {
+            "/": "/the-college-view-mobile-app-privacy-policy*",
+            "exclude": true,
+            "comment": "Excludes privacy policy so it opens in Safari"
+          }
+        ]
+      }
+    ]
+  }
+}
+

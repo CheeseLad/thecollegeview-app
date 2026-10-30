@@ -2,6 +2,7 @@
   "appName": "The College View",
   "appDescription": "The College View - DCU's Independent Student Newspaper",
   "fallbackAuthorName": "The College View",
+  "enableAuthorTap": false,
   "copyrightNotice": "© The College View 1999-2026 - Maintained by Jake Farrell",
   "urls": {
     "apiBase": "https://tcvappapi.jakefarrell.ie",
