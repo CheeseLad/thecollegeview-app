@@ -1,16 +1,27 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import '../config/app_config.dart';
 import '../config/category_config.dart';
 import '../models/article.dart';
 import '../models/category.dart';
 import '../services/wp_api_service.dart';
 
+List<Article> _parseArticlesFromJsonBody(String responseBody) {
+  final data = json.decode(responseBody);
+  if (data is List) {
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(Article.fromJson)
+        .toList();
+  }
+  return [];
+}
+
 class ArticleProvider with ChangeNotifier {
   static const String _postFields =
       'id,date,title,content,link,author,featured_media,tags,_links,_embedded';
-  static const String _postEmbed = 'author,wp:featuredmedia';
+  static const String _postEmbed = 'wp:featuredmedia';
 
   List<Article> _articles = [];
   List<Category> _categories = [];
@@ -19,6 +30,7 @@ class ArticleProvider with ChangeNotifier {
   int _currentPage = 1;
   int _totalPages = 1;
   int? _selectedCategory;
+  int _fetchGeneration = 0;
 
   List<Article> get articles => _articles;
   List<Category> get categories => _categories;
@@ -39,11 +51,22 @@ class ArticleProvider with ChangeNotifier {
         : '/wp-json/wp/v2/posts';
     return Uri.parse('${AppConfig.instance.apiBase}$path').replace(
       queryParameters: {
-        ...queryParameters,
         '_fields': _postFields,
         '_embed': _postEmbed,
+        ...queryParameters,
       },
     );
+  }
+
+  Future<List<Article>> _decodeArticles(String body) async {
+    final articles = await compute(_parseArticlesFromJsonBody, body);
+    for (final article in articles) {
+      final mediaUrl = article.embeddedFeaturedMediaUrl;
+      if (mediaUrl != null && mediaUrl.isNotEmpty && article.featuredMedia > 0) {
+        WpApiService.cacheFeaturedMediaUrl(article.featuredMedia, mediaUrl);
+      }
+    }
+    return articles;
   }
 
   Future<List<Article>> _fetchPostsList(
@@ -51,13 +74,7 @@ class ArticleProvider with ChangeNotifier {
   ) async {
     final response = await WpApiService.get(_buildPostsUri(queryParameters));
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data is List) {
-        return data
-            .whereType<Map<String, dynamic>>()
-            .map(Article.fromJson)
-            .toList();
-      }
+      return _decodeArticles(response.body);
     }
     return [];
   }
@@ -123,6 +140,7 @@ class ArticleProvider with ChangeNotifier {
   }
 
   Future<void> fetchArticles({bool forceRefresh = false}) async {
+    final generation = ++_fetchGeneration;
     _loading = true;
     notifyListeners();
 
@@ -137,11 +155,11 @@ class ArticleProvider with ChangeNotifier {
         uri,
         forceRefresh: forceRefresh,
       );
+      if (generation != _fetchGeneration) return;
+
       if (response.statusCode == 200) {
-        final loadedArticles = (json.decode(response.body) as List)
-            .whereType<Map<String, dynamic>>()
-            .map(Article.fromJson)
-            .toList();
+        final loadedArticles = await _decodeArticles(response.body);
+        if (generation != _fetchGeneration) return;
 
         if (_currentPage == 1) {
           _articles = loadedArticles;
@@ -165,10 +183,13 @@ class ArticleProvider with ChangeNotifier {
         _error = 'Failed to load articles';
       }
     } catch (e) {
+      if (generation != _fetchGeneration) return;
       _error = e.toString();
     } finally {
-      _loading = false;
-      notifyListeners();
+      if (generation == _fetchGeneration) {
+        _loading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -212,7 +233,11 @@ class ArticleProvider with ChangeNotifier {
             WpApiService.fallbackAuthorName.toLowerCase()) {
       try {
         final response = await WpApiService.get(
-          _buildPostsUri({'author': '$authorId', 'per_page': '20'}),
+          _buildPostsUri({
+            'author': '$authorId',
+            'per_page': '20',
+            '_embed': 'author,wp:featuredmedia',
+          }),
         );
         if (response.statusCode == 200) {
           final List<dynamic> data = json.decode(response.body);
@@ -315,11 +340,17 @@ class ArticleProvider with ChangeNotifier {
   void selectCategory(int? categoryId) {
     _selectedCategory = categoryId;
     _currentPage = 1;
+    _totalPages = 1;
+    _articles = [];
+    _error = null;
     fetchArticles();
   }
 
   Future<void> refreshArticles() async {
     _currentPage = 1;
+    _totalPages = 1;
+    _articles = [];
+    _error = null;
     await fetchArticles(forceRefresh: true);
   }
 
@@ -342,6 +373,9 @@ class ArticleProvider with ChangeNotifier {
   void clearFilters() {
     _selectedCategory = null;
     _currentPage = 1;
+    _totalPages = 1;
+    _articles = [];
+    _error = null;
     fetchArticles();
   }
 

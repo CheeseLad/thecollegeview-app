@@ -159,24 +159,26 @@ class _ArticleListState extends State<ArticleList> {
 
     final showBottomLoader = !usesCustomList && loading;
 
-    return ListView.builder(
-      controller: _scrollController,
-      physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: list.length + (showBottomLoader ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index >= list.length) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 4.0),
-            child: ArticleCardSkeleton(),
+    return SkeletonShimmer(
+      child: ListView.builder(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: list.length + (showBottomLoader ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= list.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 4.0),
+              child: ArticleCardSkeleton(),
+            );
+          }
+          final article = list[index];
+          return ArticleCard(
+            key: ValueKey(article.id),
+            article: article,
+            categoryName: widget.categoryName,
           );
-        }
-        final article = list[index];
-        return ArticleCard(
-          key: ValueKey(article.id),
-          article: article,
-          categoryName: widget.categoryName,
-        );
-      },
+        },
+      ),
     );
   }
 }
@@ -203,25 +205,78 @@ class ArticleCard extends StatefulWidget {
   State<ArticleCard> createState() => _ArticleCardState();
 }
 
-class _ArticleCardState extends State<ArticleCard>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
+class _ArticleCardState extends State<ArticleCard> {
+  static final DateFormat _savedDateFormat = DateFormat('MMM d, y');
 
-  late final Future<_CardDetails> _detailsFuture;
   late _CardDetails _currentDetails;
+  String? _formattedSavedDate;
+  bool _isReady = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _syncSavedDate();
     _currentDetails = _CardDetails(
       imageUrl: WpApiService.getInitialFeaturedMediaUrl(widget.article) ?? '',
       authorName: WpApiService.getInitialAuthorName(widget.article) ?? '',
     );
-    _detailsFuture = _loadDetails();
   }
 
-  Future<_CardDetails> _loadDetails() async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isReady && !_isLoading) {
+      _resolveOrLoadDetails();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ArticleCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.savedAt != widget.savedAt) {
+      _syncSavedDate();
+    }
+    if (oldWidget.article.id != widget.article.id) {
+      _isReady = false;
+      _isLoading = false;
+      _currentDetails = _CardDetails(
+        imageUrl: WpApiService.getInitialFeaturedMediaUrl(widget.article) ?? '',
+        authorName: WpApiService.getInitialAuthorName(widget.article) ?? '',
+      );
+      _resolveOrLoadDetails();
+    }
+  }
+
+  void _syncSavedDate() {
+    _formattedSavedDate = widget.savedAt != null
+        ? '💾 Saved ${_savedDateFormat.format(widget.savedAt!)}'
+        : null;
+  }
+
+  void _resolveOrLoadDetails() {
+    final initialImage = _currentDetails.imageUrl;
+    final initialAuthor = _currentDetails.authorName;
+
+    final hasResolvedMedia = initialImage.isNotEmpty
+        ? NetworkImageWithFallback.isPreloaded(
+            context,
+            initialImage,
+            width: 110,
+            height: 110,
+          )
+        : widget.article.featuredMedia <= 0;
+    final hasResolvedAuthor = initialAuthor.isNotEmpty;
+
+    if (hasResolvedMedia && hasResolvedAuthor) {
+      _isReady = true;
+    } else {
+      _loadDetails(widget.article.id);
+    }
+  }
+
+  Future<void> _loadDetails(int articleId) async {
+    _isLoading = true;
     final results = await Future.wait([
       WpApiService.resolveFeaturedMediaUrl(
           widget.article, _currentDetails.imageUrl),
@@ -229,20 +284,41 @@ class _ArticleCardState extends State<ArticleCard>
           widget.article, _currentDetails.authorName),
     ]);
 
-    final details = _CardDetails(imageUrl: results[0], authorName: results[1]);
-    if (mounted) {
-      _currentDetails = details;
+    if (!mounted || widget.article.id != articleId) return;
+
+    final imageUrl = results[0];
+    final authorName = results[1];
+
+    if (imageUrl.isNotEmpty) {
+      await NetworkImageWithFallback.preload(
+        context,
+        imageUrl,
+        width: 110,
+        height: 110,
+      );
     }
-    return details;
+
+    if (!mounted || widget.article.id != articleId) return;
+
+    setState(() {
+      _currentDetails = _CardDetails(
+        imageUrl: imageUrl,
+        authorName: authorName,
+      );
+      _isReady = true;
+      _isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    if (!_isReady) {
+      return ArticleCardSkeleton(margin: widget.margin);
+    }
+
+    final details = _currentDetails;
     final formattedDate = widget.article.formattedDate;
-    final String? savedDate = widget.savedAt != null
-        ? '💾 Saved ${DateFormat('MMM d, y').format(widget.savedAt!)}'
-        : null;
+    final String? savedDate = _formattedSavedDate;
     final subtextStyle = TextStyle(
       fontSize: 13,
       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -254,84 +330,76 @@ class _ArticleCardState extends State<ArticleCard>
         child: Card(
           margin: widget.margin ??
               const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: FutureBuilder<_CardDetails>(
-            future: _detailsFuture,
-            initialData: _currentDetails,
-            builder: (context, snapshot) {
-              final details = snapshot.data ?? _currentDetails;
-
-              return InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ArticleDetailScreen(
-                      article: widget.article,
-                      categoryName: widget.categoryName,
-                      featuredMediaUrl: details.imageUrl,
-                      authorName: details.authorName,
-                      tagNames: widget.tagNames,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ArticleDetailScreen(
+                  article: widget.article,
+                  categoryName: widget.categoryName,
+                  featuredMediaUrl: details.imageUrl,
+                  authorName: details.authorName,
+                  tagNames: widget.tagNames,
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  NetworkImageWithFallback(
+                    imageUrl: details.imageUrl,
+                    fallbackAssetPath: 'assets/logo.png',
+                    width: 110,
+                    height: 110,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.article.title,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (formattedDate.isNotEmpty)
+                          Text(formattedDate, style: subtextStyle),
+                        if (savedDate != null) ...[
+                          const SizedBox(height: 4),
+                          Text(savedDate, style: subtextStyle),
+                        ],
+                        if (details.authorName.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '👤 ${details.authorName}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: subtextStyle,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      NetworkImageWithFallback(
-                        imageUrl: details.imageUrl,
-                        fallbackAssetPath: 'assets/logo.png',
-                        width: 110,
-                        height: 110,
-                        borderRadius: BorderRadius.circular(8),
+                  if (widget.onRemove != null)
+                    IconButton(
+                      icon: Icon(
+                        Icons.bookmark,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.article.title,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            if (formattedDate.isNotEmpty)
-                              Text(formattedDate, style: subtextStyle),
-                            if (savedDate != null) ...[
-                              const SizedBox(height: 4),
-                              Text(savedDate, style: subtextStyle),
-                            ],
-                            if (details.authorName.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                '👤 ${details.authorName}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: subtextStyle,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      if (widget.onRemove != null)
-                        IconButton(
-                          icon: Icon(
-                            Icons.bookmark,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          onPressed: widget.onRemove,
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            },
+                      onPressed: widget.onRemove,
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

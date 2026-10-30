@@ -102,13 +102,9 @@ class _FilteredArticlesScreenState extends State<FilteredArticlesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        backgroundColor: colorScheme.surfaceContainerHighest,
-        foregroundColor: colorScheme.onSurface,
       ),
       body: Column(
         children: [

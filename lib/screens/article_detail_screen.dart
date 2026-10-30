@@ -38,17 +38,99 @@ class ArticleDetailScreen extends StatefulWidget {
 }
 
 class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
-  late final Future<String> _authorNameFuture =
-      WpApiService.resolveAuthorName(widget.article, widget.authorName);
-  late final Future<String> _featuredMediaUrlFuture =
-      WpApiService.resolveFeaturedMediaUrl(
-          widget.article, widget.featuredMediaUrl);
-  late final Future<List<String>> _tagNamesFuture =
-      (widget.tagNames != null && widget.tagNames!.isNotEmpty)
-          ? Future.value(widget.tagNames!)
-          : WpApiService.fetchTagNames(widget.article.tags);
+  String _authorName = '';
+  String _featuredMediaUrl = '';
+  List<String> _tagNames = const [];
+  bool _isReady = false;
+  bool _isLoading = false;
 
   final GlobalKey _shareButtonKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _authorName =
+        WpApiService.getInitialAuthorName(widget.article, widget.authorName) ??
+            '';
+    _featuredMediaUrl = WpApiService.getInitialFeaturedMediaUrl(
+            widget.article, widget.featuredMediaUrl) ??
+        '';
+    _tagNames =
+        WpApiService.getInitialTagNames(widget.article.tags, widget.tagNames) ??
+            const [];
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isReady && !_isLoading) {
+      _resolveOrLoadArticleDetails();
+    }
+  }
+
+  void _resolveOrLoadArticleDetails() {
+    final hasFeaturedMedia =
+        widget.article.featuredMedia > 0 || _featuredMediaUrl.isNotEmpty;
+    final hasResolvedMedia = !hasFeaturedMedia ||
+        (_featuredMediaUrl.isNotEmpty &&
+            NetworkImageWithFallback.isPreloaded(
+              context,
+              _featuredMediaUrl,
+              width: double.infinity,
+              height: 220,
+            ));
+    final hasResolvedAuthor = _authorName.isNotEmpty;
+    final hasResolvedTags = WpApiService.getInitialTagNames(
+            widget.article.tags, widget.tagNames) !=
+        null;
+
+    if (hasResolvedMedia && hasResolvedAuthor && hasResolvedTags) {
+      _isReady = true;
+    } else {
+      _loadAllDetails();
+    }
+  }
+
+  Future<void> _loadAllDetails() async {
+    _isLoading = true;
+    final tagFuture = (widget.tagNames != null && widget.tagNames!.isNotEmpty)
+        ? Future.value(widget.tagNames!)
+        : WpApiService.fetchTagNames(widget.article.tags);
+
+    final results = await Future.wait([
+      WpApiService.resolveAuthorName(widget.article, widget.authorName),
+      WpApiService.resolveFeaturedMediaUrl(
+          widget.article, widget.featuredMediaUrl),
+      tagFuture,
+    ]);
+
+    if (!mounted) return;
+
+    final resolvedAuthor = (results[0] as String).trim();
+    final resolvedMediaUrl = (results[1] as String).trim();
+    final resolvedTags = results[2] as List<String>;
+
+    if (resolvedMediaUrl.isNotEmpty) {
+      await NetworkImageWithFallback.preload(
+        context,
+        resolvedMediaUrl,
+        width: double.infinity,
+        height: 220,
+      );
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _authorName = resolvedAuthor.isNotEmpty
+          ? resolvedAuthor
+          : WpApiService.fallbackAuthorName;
+      _featuredMediaUrl = resolvedMediaUrl;
+      _tagNames = resolvedTags;
+      _isReady = true;
+      _isLoading = false;
+    });
+  }
 
   void _showFontSizeSheet(BuildContext context) {
     showModalBottomSheet(
@@ -301,20 +383,12 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final formattedDate = widget.article.formattedDate;
-    final savedArticlesProvider = Provider.of<SavedArticlesProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
     final colorScheme = Theme.of(context).colorScheme;
-    final isSaved = savedArticlesProvider.isArticleSaved(widget.article.id);
-    final hasFeaturedMedia = widget.article.featuredMedia > 0 ||
-        (widget.article.embeddedFeaturedMediaUrl != null &&
-            widget.article.embeddedFeaturedMediaUrl!.isNotEmpty);
 
     return Scaffold(
       backgroundColor: AppTheme.articleDetailBackgroundColor(context),
       appBar: AppBar(
         title: Text(widget.article.title),
-        backgroundColor: colorScheme.surfaceContainerHighest,
-        foregroundColor: colorScheme.onSurface,
         actions: [
           IconButton(
             icon: const Icon(Icons.format_size),
@@ -329,15 +403,22 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 4.0),
-            child: IconButton(
-              icon: Icon(
-                isSaved ? Icons.bookmark : Icons.bookmark_border,
-                color: isSaved
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
-              ),
-              onPressed: () => savedArticlesProvider.toggleSaveArticle(
-                  widget.article, widget.categoryName),
+            child: Selector<SavedArticlesProvider, bool>(
+              selector: (_, provider) =>
+                  provider.isArticleSaved(widget.article.id),
+              builder: (context, isSaved, _) {
+                return IconButton(
+                  icon: Icon(
+                    isSaved ? Icons.bookmark : Icons.bookmark_border,
+                    color: isSaved
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                  ),
+                  onPressed: () => context
+                      .read<SavedArticlesProvider>()
+                      .toggleSaveArticle(widget.article, widget.categoryName),
+                );
+              },
             ),
           ),
         ],
@@ -346,87 +427,66 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         children: [
           const OfflineBanner(),
           Expanded(
-            child: SingleChildScrollView(
-              child: SelectionArea(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _CenteredContentSection(
-                      color: AppTheme.articleDetailBackgroundColor(context),
-                      padding: const EdgeInsets.fromLTRB(15, 15, 15, 20),
+            child: !_isReady
+                ? const ArticleDetailSkeleton()
+                : SingleChildScrollView(
+                    child: SelectionArea(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text(
-                            widget.article.title,
-                            style: TextStyle(
-                              fontSize: themeProvider.articleFontSize + 8,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          if (formattedDate.isNotEmpty)
-                            Text(
-                              formattedDate,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          FutureBuilder<String>(
-                            future: _authorNameFuture,
-                            initialData: WpApiService.getInitialAuthorName(
-                                widget.article, widget.authorName),
-                            builder: (context, snapshot) {
-                              final author = snapshot.data ?? '';
-                              if (author.isEmpty) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 4),
-                                    child: SkeletonBox(
-                                      width: 120,
-                                      height: 28,
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(16)),
+                          _CenteredContentSection(
+                            color:
+                                AppTheme.articleDetailBackgroundColor(context),
+                            padding: const EdgeInsets.fromLTRB(15, 15, 15, 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Selector<ThemeProvider, double>(
+                                  selector: (_, tp) => tp.articleFontSize,
+                                  builder: (context, articleFontSize, _) {
+                                    return Text(
+                                      widget.article.title,
+                                      style: TextStyle(
+                                        fontSize: articleFontSize + 8,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 10),
+                                if (formattedDate.isNotEmpty)
+                                  Text(
+                                    formattedDate,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: colorScheme.onSurfaceVariant,
                                     ),
-                                  );
-                                }
-                                return _buildTappableAuthorChip(
+                                  ),
+                                _buildTappableAuthorChip(
                                   context,
-                                  WpApiService.fallbackAuthorName,
-                                );
-                              }
-                              return _buildTappableAuthorChip(context, author);
-                            },
-                          ),
-                          Text(
-                            '📂 ${widget.categoryName}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          if (hasFeaturedMedia)
-                            FutureBuilder<String>(
-                              future: _featuredMediaUrlFuture,
-                              initialData:
-                                  WpApiService.getInitialFeaturedMediaUrl(
-                                      widget.article, widget.featuredMediaUrl),
-                              builder: (context, snapshot) {
-                                final mediaUrl = snapshot.data ?? '';
-                                if (mediaUrl.isNotEmpty) {
-                                  return Padding(
+                                  _authorName.isNotEmpty
+                                      ? _authorName
+                                      : WpApiService.fallbackAuthorName,
+                                ),
+                                Text(
+                                  '📂 ${widget.categoryName}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                if (_featuredMediaUrl.isNotEmpty)
+                                  Padding(
                                     padding: const EdgeInsets.only(bottom: 20),
                                     child: GestureDetector(
                                       onTap: () => FullscreenImageViewer.show(
                                         context,
-                                        imageUrl: mediaUrl,
+                                        imageUrl: _featuredMediaUrl,
                                         caption: widget.article.title,
                                       ),
                                       child: NetworkImageWithFallback(
-                                        imageUrl: mediaUrl,
+                                        imageUrl: _featuredMediaUrl,
                                         fallbackAssetPath: 'assets/logo.png',
                                         width: double.infinity,
                                         height: 220,
@@ -434,79 +494,74 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                     ),
-                                  );
-                                } else if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Padding(
-                                    padding: EdgeInsets.only(bottom: 20),
-                                    child: SkeletonBox(
-                                      width: double.infinity,
-                                      height: 220,
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(10)),
-                                    ),
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              },
+                                  ),
+                                Selector<ThemeProvider, double>(
+                                  selector: (_, tp) => tp.articleFontSize,
+                                  builder: (context, articleFontSize, _) {
+                                    return HtmlWidget(
+                                      widget.article.content,
+                                      renderMode: RenderMode.column,
+                                      textStyle: TextStyle(
+                                        fontSize: articleFontSize,
+                                        height: 1.5,
+                                      ),
+                                      onTapUrl: (url) =>
+                                          DeepLinkHandler.handleTappedUrl(
+                                              context, url),
+                                      customStylesBuilder: (element) =>
+                                          AppTheme.editorialHtmlStyles(
+                                              context, element.localName),
+                                      customWidgetBuilder: (element) {
+                                        if (element.localName == 'img') {
+                                          final src = element.attributes['src'];
+                                          if (src != null && src.isNotEmpty) {
+                                            final alt = element
+                                                .attributes['alt']
+                                                ?.trim();
+                                            final figCaption = element.parent
+                                                ?.querySelector('figcaption')
+                                                ?.text
+                                                .trim();
+                                            final caption = (alt != null &&
+                                                    alt.isNotEmpty)
+                                                ? alt
+                                                : figCaption;
+                                            return GestureDetector(
+                                              onTap: () =>
+                                                  FullscreenImageViewer.show(
+                                                context,
+                                                imageUrl: src,
+                                                caption: caption,
+                                              ),
+                                              child: NetworkImageWithFallback(
+                                                imageUrl: src,
+                                                fallbackAssetPath:
+                                                    'assets/logo.png',
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                        return null;
+                                      },
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 10),
+                                if (_tagNames.isNotEmpty)
+                                  _buildTagChips(context, _tagNames),
+                              ],
                             ),
-                          HtmlWidget(
-                            widget.article.content,
-                            renderMode: RenderMode.column,
-                            textStyle: TextStyle(
-                              fontSize: themeProvider.articleFontSize,
-                              height: 1.5,
-                            ),
-                            onTapUrl: (url) =>
-                                DeepLinkHandler.handleTappedUrl(context, url),
-                            customStylesBuilder: (element) =>
-                                element.localName == 'img'
-                                    ? {'border-radius': '10px'}
-                                    : null,
-                            customWidgetBuilder: (element) {
-                              if (element.localName == 'img') {
-                                final src = element.attributes['src'];
-                                if (src != null && src.isNotEmpty) {
-                                  return GestureDetector(
-                                    onTap: () => FullscreenImageViewer.show(
-                                      context,
-                                      imageUrl: src,
-                                      caption: element.attributes['alt'],
-                                    ),
-                                    child: NetworkImageWithFallback(
-                                      imageUrl: src,
-                                      fallbackAssetPath: 'assets/logo.png',
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  );
-                                }
-                              }
-                              return null;
-                            },
                           ),
-                          const SizedBox(height: 10),
-                          if (widget.article.tags.isNotEmpty)
-                            FutureBuilder<List<String>>(
-                              future: _tagNamesFuture,
-                              builder: (context, snapshot) {
-                                final tags = snapshot.data;
-                                if (tags != null && tags.isNotEmpty) {
-                                  return _buildTagChips(context, tags);
-                                }
-                                return const SizedBox.shrink();
-                              },
-                            ),
+                          _RelatedArticlesSection(
+                            article: widget.article,
+                            categoryName: widget.categoryName,
+                          ),
                         ],
                       ),
                     ),
-                    _RelatedArticlesSection(
-                      article: widget.article,
-                      categoryName: widget.categoryName,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
           ),
         ],
       ),
@@ -592,16 +647,18 @@ class _RelatedArticlesSectionState extends State<_RelatedArticlesSection> {
             _CenteredContentSection(
               color: Theme.of(context).scaffoldBackgroundColor,
               padding: const EdgeInsets.fromLTRB(15, 12, 15, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: related
-                    .map((relatedArticle) => ArticleCard(
-                          key: ValueKey(relatedArticle.id),
-                          article: relatedArticle,
-                          categoryName: widget.categoryName,
-                          margin: const EdgeInsets.only(bottom: 10),
-                        ))
-                    .toList(),
+              child: SkeletonShimmer(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: related
+                      .map((relatedArticle) => ArticleCard(
+                            key: ValueKey(relatedArticle.id),
+                            article: relatedArticle,
+                            categoryName: widget.categoryName,
+                            margin: const EdgeInsets.only(bottom: 10),
+                          ))
+                      .toList(),
+                ),
               ),
             ),
           ],

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/saved_articles_provider.dart';
 import '../widgets/article_list.dart';
 import '../widgets/cv_navigation_drawer.dart';
+import '../widgets/skeleton.dart';
 
 class SavedArticlesScreen extends StatelessWidget {
   const SavedArticlesScreen({super.key});
@@ -49,22 +50,24 @@ class SavedArticlesScreen extends StatelessWidget {
                   ],
                 ),
               )
-            : ListView.builder(
-                itemCount: savedArticlesProvider.savedArticles.length,
-                itemBuilder: (context, index) {
-                  final savedArticle =
-                      savedArticlesProvider.savedArticles[index];
+            : SkeletonShimmer(
+                child: ListView.builder(
+                  itemCount: savedArticlesProvider.savedArticles.length,
+                  itemBuilder: (context, index) {
+                    final savedArticle =
+                        savedArticlesProvider.savedArticles[index];
 
-                  return ArticleCard(
-                    key: ValueKey(savedArticle.id),
-                    article: savedArticle.article,
-                    categoryName: savedArticle.categoryName,
-                    savedAt: savedArticle.savedAt,
-                    tagNames: savedArticle.tagNames,
-                    onRemove: () =>
-                        savedArticlesProvider.removeArticle(savedArticle.id),
-                  );
-                },
+                    return ArticleCard(
+                      key: ValueKey(savedArticle.id),
+                      article: savedArticle.article,
+                      categoryName: savedArticle.categoryName,
+                      savedAt: savedArticle.savedAt,
+                      tagNames: savedArticle.tagNames,
+                      onRemove: () =>
+                          savedArticlesProvider.removeArticle(savedArticle.id),
+                    );
+                  },
+                ),
               ),
       ),
     );

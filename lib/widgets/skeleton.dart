@@ -44,11 +44,11 @@ class _SkeletonShimmerState extends State<SkeletonShimmer>
     final base = widget.baseColor ??
         (isDark
             ? Theme.of(context).colorScheme.surfaceContainerHighest
-            : Colors.grey.shade300);
+            : const Color(0xFFC2C4CA));
     final highlight = widget.highlightColor ??
         (isDark
             ? Theme.of(context).colorScheme.surfaceBright
-            : Colors.grey.shade100);
+            : const Color(0xFFDADCE2));
 
     return SkeletonShimmerScope(
       animation: _controller,
@@ -159,12 +159,12 @@ class _SkeletonBoxState extends State<SkeletonBox>
         scope?.baseColor ??
         (isDark
             ? Theme.of(context).colorScheme.surfaceContainerHighest
-            : Colors.grey.shade300);
+            : const Color(0xFFC2C4CA));
     final highlight = widget.highlightColor ??
         scope?.highlightColor ??
         (isDark
             ? Theme.of(context).colorScheme.surfaceBright
-            : Colors.grey.shade100);
+            : const Color(0xFFDADCE2));
 
     return AnimatedBuilder(
       animation: animation,

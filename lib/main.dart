@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'config/app_config.dart';
@@ -14,11 +15,13 @@ import 'utils/display_utils.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await DisplayUtils.enableHighRefreshRate();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-  await AppConfig.load();
-
-  await Hive.initFlutter();
+  await Future.wait([
+    DisplayUtils.enableHighRefreshRate(),
+    AppConfig.load(),
+    Hive.initFlutter(),
+  ]);
 
   final savedArticlesProvider = SavedArticlesProvider();
   final themeProvider = ThemeProvider();
@@ -53,7 +56,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    DisplayUtils.enableHighRefreshRate();
   }
 
   @override
@@ -107,14 +109,21 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: widget.savedArticlesProvider),
         ChangeNotifierProvider.value(value: widget.themeProvider),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
+      child: Selector<ThemeProvider, ThemeMode>(
+        selector: (_, themeProvider) => themeProvider.themeMode,
+        builder: (context, themeMode, child) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: AppConfig.instance.appName,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            themeMode: themeProvider.themeMode,
+            themeMode: themeMode,
+            builder: (context, appChild) {
+              return AnnotatedRegion<SystemUiOverlayStyle>(
+                value: AppTheme.systemOverlayStyleFor(context),
+                child: appChild ?? const SizedBox.shrink(),
+              );
+            },
             home: const ArticlesScreen(categoryName: 'All Articles'),
             onGenerateRoute: _onGenerateRoute,
           );

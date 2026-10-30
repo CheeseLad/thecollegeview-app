@@ -5,6 +5,7 @@ class CacheService {
   static const String _boxName = 'apiCache';
   static const int _freshTtlMs = 3600000; // 1 hour fresh cache
   static const int _maxStaleTtlMs = 604800000; // 7 days offline fallback cache
+  static const int _maxEntries = 150;
   static final CacheService _instance = CacheService._internal();
   late Box<Map> _box;
 
@@ -68,6 +69,9 @@ class CacheService {
       'headers': response.headers,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     });
+    if (_box.length > _maxEntries) {
+      await _evictOldestEntries();
+    }
   }
 
   Future<void> _clearExpired() async {
@@ -85,8 +89,29 @@ class CacheService {
       }
     }
 
-    for (final key in keysToDelete) {
-      await _box.delete(key);
+    if (keysToDelete.isNotEmpty) {
+      await _box.deleteAll(keysToDelete);
+    }
+
+    if (_box.length > _maxEntries) {
+      await _evictOldestEntries();
+    }
+  }
+
+  Future<void> _evictOldestEntries() async {
+    if (!_box.isOpen || _box.length <= _maxEntries) return;
+    final entriesWithTimestamp = <({dynamic key, int timestamp})>[];
+    for (final key in _box.keys) {
+      final entry = _box.get(key);
+      final ts = (entry?['timestamp'] as int?) ?? 0;
+      entriesWithTimestamp.add((key: key, timestamp: ts));
+    }
+    entriesWithTimestamp.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    final excessCount = entriesWithTimestamp.length - _maxEntries;
+    if (excessCount > 0) {
+      await _box.deleteAll(
+        entriesWithTimestamp.take(excessCount).map((e) => e.key),
+      );
     }
   }
 

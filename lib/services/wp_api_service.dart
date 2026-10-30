@@ -13,6 +13,7 @@ class WpApiService {
       '${AppConfig.instance.apiBase}/get-subheading';
 
   static final CacheService _cache = CacheService();
+  static final http.Client _client = http.Client();
 
   /// Reactive indicator of whether the most recent network request failed and
   /// fell back to offline/cached mode.
@@ -20,6 +21,11 @@ class WpApiService {
 
   static final Map<int, String> _mediaUrlMemoryCache = {};
   static final Map<String, String> _authorMemoryCache = {};
+  static final Map<int, String> _tagMemoryCache = {};
+
+  static final Map<String, Future<http.Response>> _inFlightGetRequests = {};
+  static final Map<String, Future<String>> _inFlightAuthorRequests = {};
+  static final Map<int, Future<String>> _inFlightMediaRequests = {};
 
   static String? getCachedFeaturedMediaUrl(int mediaId) {
     if (mediaId <= 0) return null;
@@ -75,6 +81,20 @@ class WpApiService {
     return null;
   }
 
+  static List<String>? getInitialTagNames(
+    List<int> tagIds, [
+    List<String>? overrideTagNames,
+  ]) {
+    if (tagIds.isEmpty) return const [];
+    if (overrideTagNames != null && overrideTagNames.isNotEmpty) {
+      return overrideTagNames;
+    }
+    if (tagIds.every(_tagMemoryCache.containsKey)) {
+      return tagIds.map((id) => _tagMemoryCache[id]!).toList();
+    }
+    return null;
+  }
+
   static Future<String> resolveFeaturedMediaUrl(
     Article article, [
     String? overrideUrl,
@@ -106,8 +126,34 @@ class WpApiService {
       }
     }
 
+    final canCoalesce = !forceRefresh && (headers == null || headers.isEmpty);
+    final key = uri.toString();
+    if (canCoalesce) {
+      final inFlight = _inFlightGetRequests[key];
+      if (inFlight != null) {
+        return inFlight;
+      }
+    }
+
+    final future = _performGet(uri, headers: headers);
+    if (canCoalesce) {
+      _inFlightGetRequests[key] = future;
+    }
     try {
-      final response = await http
+      return await future;
+    } finally {
+      if (canCoalesce) {
+        _inFlightGetRequests.remove(key);
+      }
+    }
+  }
+
+  static Future<http.Response> _performGet(
+    Uri uri, {
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final response = await _client
           .get(uri, headers: headers)
           .timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
@@ -185,21 +231,37 @@ class WpApiService {
     String articleUrl, [
     int? authorId,
   ]) async {
-    if (articleUrl.trim().isEmpty) {
+    final trimmedUrl = articleUrl.trim();
+    if (trimmedUrl.isEmpty) {
       return fallbackAuthorName;
     }
-    final cached = getCachedAuthorName(articleUrl);
+    final cached = getCachedAuthorName(trimmedUrl);
     if (cached != null && cached.isNotEmpty) {
       return cached;
     }
+
+    final inFlight = _inFlightAuthorRequests[trimmedUrl];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final future = () async {
+      try {
+        final authorName = await fetchAuthorInfo(trimmedUrl, authorId);
+        final decoded = HtmlUtils.decodeHtmlEntities(authorName).trim();
+        final result = decoded.isNotEmpty ? decoded : fallbackAuthorName;
+        cacheAuthorName(trimmedUrl, result);
+        return result;
+      } catch (_) {
+        return fallbackAuthorName;
+      }
+    }();
+
+    _inFlightAuthorRequests[trimmedUrl] = future;
     try {
-      final authorName = await fetchAuthorInfo(articleUrl, authorId);
-      final decoded = HtmlUtils.decodeHtmlEntities(authorName).trim();
-      final result = decoded.isNotEmpty ? decoded : fallbackAuthorName;
-      cacheAuthorName(articleUrl, result);
-      return result;
-    } catch (_) {
-      return fallbackAuthorName;
+      return await future;
+    } finally {
+      _inFlightAuthorRequests.remove(trimmedUrl);
     }
   }
 
@@ -209,35 +271,81 @@ class WpApiService {
     if (cached != null && cached.isNotEmpty) {
       return cached;
     }
-    try {
-      final response = await get(
-        Uri.parse('${AppConfig.instance.apiBase}/wp-json/wp/v2/media/$mediaId'),
-      );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final url = data['source_url']?.toString() ?? '';
-        if (url.isNotEmpty) {
-          cacheFeaturedMediaUrl(mediaId, url);
+    final inFlight = _inFlightMediaRequests[mediaId];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final future = () async {
+      try {
+        final response = await get(
+          Uri.parse(
+              '${AppConfig.instance.apiBase}/wp-json/wp/v2/media/$mediaId'),
+        );
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final url = data is Map
+              ? (Article.extractPreferredMediaUrl(data) ?? '')
+              : '';
+          if (url.isNotEmpty) {
+            cacheFeaturedMediaUrl(mediaId, url);
+          }
+          return url;
         }
-        return url;
+        return '';
+      } catch (_) {
+        return '';
       }
-      return '';
-    } catch (_) {
-      return '';
+    }();
+
+    _inFlightMediaRequests[mediaId] = future;
+    try {
+      return await future;
+    } finally {
+      _inFlightMediaRequests.remove(mediaId);
     }
   }
 
   static Future<List<String>> fetchTagNames(List<int> tagIds) async {
     if (tagIds.isEmpty) return [];
+
+    final missingIds =
+        tagIds.where((id) => !_tagMemoryCache.containsKey(id)).toList();
+
+    if (missingIds.isEmpty) {
+      return tagIds
+          .map((id) => _tagMemoryCache[id])
+          .whereType<String>()
+          .toList();
+    }
+
     try {
       final url =
-          '${AppConfig.instance.apiBase}/wp-json/wp/v2/tags?include=${tagIds.join(',')}';
+          '${AppConfig.instance.apiBase}/wp-json/wp/v2/tags?include=${missingIds.join(',')}&_fields=id,name';
       final response = await get(Uri.parse(url));
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as List;
+        for (final item in data.whereType<Map>()) {
+          final id = int.tryParse(item['id']?.toString() ?? '0') ?? 0;
+          final name =
+              HtmlUtils.decodeHtmlEntities(item['name']?.toString() ?? '');
+          if (id > 0 && name.isNotEmpty) {
+            _tagMemoryCache[id] = name;
+          }
+        }
+        final resolved = tagIds
+            .map((id) => _tagMemoryCache[id])
+            .whereType<String>()
+            .toList();
+        if (resolved.isNotEmpty) {
+          return resolved;
+        }
         return data
-            .map((item) => HtmlUtils.decodeHtmlEntities(item['name']))
+            .map((item) =>
+                HtmlUtils.decodeHtmlEntities(item['name']?.toString() ?? ''))
+            .where((name) => name.isNotEmpty)
             .toList();
       }
       return [];
@@ -249,7 +357,8 @@ class WpApiService {
   static Future<String> fetchAboutHtml() async {
     try {
       final response = await get(
-        Uri.parse('${AppConfig.instance.apiBase}/wp-json/wp/v2/pages?slug=about'),
+        Uri.parse(
+            '${AppConfig.instance.apiBase}/wp-json/wp/v2/pages?slug=about'),
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

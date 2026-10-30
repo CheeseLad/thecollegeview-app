@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../config/app_config.dart';
 import '../services/wp_api_service.dart';
+import '../theme/app_theme.dart';
 import '../utils/deep_link_handler.dart';
 import '../widgets/cv_navigation_drawer.dart';
 import '../widgets/skeleton.dart';
@@ -62,16 +63,19 @@ class _AboutScreenState extends State<AboutScreen> {
                             htmlContent,
                             textStyle:
                                 const TextStyle(fontSize: 16, height: 1.5),
+                            customStylesBuilder: (element) =>
+                                AppTheme.editorialHtmlStyles(
+                                    context, element.localName),
                             onTapUrl: (url) =>
                                 DeepLinkHandler.handleTappedUrl(context, url),
                           ),
-                          const SizedBox(height: 24),
-                          InkWell(
+                          // const SizedBox(height: 24),
+                          /*InkWell(
                             borderRadius: BorderRadius.circular(8),
                             onTap: () => DeepLinkHandler.launchExternalUrl(
                               config.privacyPolicyUrl,
                             ),
-                            child: Padding(
+                             child: Padding(
                               padding:
                                   const EdgeInsets.symmetric(vertical: 6.0),
                               child: Row(
@@ -99,8 +103,8 @@ class _AboutScreenState extends State<AboutScreen> {
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
+                            ), 
+                          ),*/
                           const SizedBox(height: 20),
                           Text(
                             config.copyrightNotice,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'network_image_with_fallback.dart';
 
 class FullscreenImageViewer extends StatefulWidget {
@@ -70,6 +71,8 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        systemOverlayStyle: AppTheme.darkSystemOverlayStyle,
         leading: IconButton(
           icon: const Icon(Icons.close),
           tooltip: 'Close',

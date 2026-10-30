@@ -185,6 +185,7 @@ void main() {
           author: 1,
           featuredMedia: 0,
           tags: const [],
+          embeddedAuthorName: 'Test Author',
         ),
       );
 
@@ -207,6 +208,34 @@ void main() {
 
       expect(find.byType(ArticleCardSkeleton), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+
+    testWidgets('ArticleCard stays as ArticleCardSkeleton until author and image resolve',
+        (tester) async {
+      const unresolvedArticle = Article(
+        id: 999,
+        date: '2026-10-14T10:00:00',
+        title: 'Unresolved Article',
+        content: 'Content',
+        link: 'https://thecollegeview.ie/unresolved-article',
+        author: 1,
+        featuredMedia: 42,
+        tags: [],
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: ArticleCard(
+              article: unresolvedArticle,
+              categoryName: 'News',
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(ArticleCardSkeleton), findsOneWidget);
+      expect(find.text('Unresolved Article'), findsNothing);
     });
   });
 }
