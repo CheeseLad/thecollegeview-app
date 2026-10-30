@@ -299,9 +299,8 @@ class WpApiService {
 
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
-          final url = data is Map
-              ? (Article.extractPreferredMediaUrl(data) ?? '')
-              : '';
+          final url =
+              data is Map ? (Article.extractPreferredMediaUrl(data) ?? '') : '';
           if (url.isNotEmpty) {
             cacheFeaturedMediaUrl(mediaId, url);
           }

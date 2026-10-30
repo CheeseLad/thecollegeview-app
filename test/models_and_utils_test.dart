@@ -177,14 +177,19 @@ void main() {
       expect(themeProvider.articleFontSizeLabel, 'Extra Large');
     });
 
-    test('DeepLinkHandler recognizes internal website domains and privacy policy', () {
-      expect(DeepLinkHandler.isInternalWebsiteHost('thecollegeview.ie'), isTrue);
-      expect(DeepLinkHandler.isInternalWebsiteHost('www.thecollegeview.ie'), isTrue);
+    test(
+        'DeepLinkHandler recognizes internal website domains and privacy policy',
+        () {
+      expect(
+          DeepLinkHandler.isInternalWebsiteHost('thecollegeview.ie'), isTrue);
+      expect(DeepLinkHandler.isInternalWebsiteHost('www.thecollegeview.ie'),
+          isTrue);
       expect(DeepLinkHandler.isInternalWebsiteHost('google.com'), isFalse);
 
       expect(
         DeepLinkHandler.isPrivacyPolicyPath(
-          Uri.parse('https://thecollegeview.ie/the-college-view-mobile-app-privacy-policy'),
+          Uri.parse(
+              'https://thecollegeview.ie/the-college-view-mobile-app-privacy-policy'),
         ),
         isTrue,
       );
@@ -196,7 +201,8 @@ void main() {
       );
     });
 
-    test('AppConfig enableAuthorTap defaults to false and parses from JSON', () {
+    test('AppConfig enableAuthorTap defaults to false and parses from JSON',
+        () {
       expect(AppConfig.defaults.enableAuthorTap, isFalse);
       final enabledConfig = AppConfig.fromJson({'enableAuthorTap': true});
       expect(enabledConfig.enableAuthorTap, isTrue);

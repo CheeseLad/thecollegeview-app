@@ -28,7 +28,8 @@ void main() {
           'https://chat.whatsapp.com/C8Rwkvo7h7k4STz79ICfHV');
       expect(config.imageProxyUrl, 'https://images.weserv.nl/?url=');
       expect(config.contacts, isNotEmpty);
-      expect(config.contacts.first.emails, contains('editor@thecollegeview.ie'));
+      expect(
+          config.contacts.first.emails, contains('editor@thecollegeview.ie'));
     });
 
     test('AppConfig.fromJson parses custom contacts list', () {

@@ -75,8 +75,10 @@ class _ArticleListState extends State<ArticleList> {
         : Provider.of<ArticleProvider>(context);
 
     final list = widget.articles ?? articleProvider.articles;
-    final loading = widget.isLoading ?? (usesCustomList ? false : articleProvider.loading);
-    final error = widget.errorMessage ?? (usesCustomList ? null : articleProvider.error);
+    final loading =
+        widget.isLoading ?? (usesCustomList ? false : articleProvider.loading);
+    final error =
+        widget.errorMessage ?? (usesCustomList ? null : articleProvider.error);
 
     if (loading && list.isEmpty) {
       return const ArticleListSkeleton();

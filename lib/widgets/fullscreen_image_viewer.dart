@@ -136,4 +136,3 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
     );
   }
 }
-

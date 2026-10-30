@@ -385,9 +385,8 @@ class AppConfig {
       ],
       defaultAuthorSubheadingEndpointPath,
     );
-    final normalizedEndpointPath = rawEndpointPath.startsWith('/')
-        ? rawEndpointPath
-        : '/$rawEndpointPath';
+    final normalizedEndpointPath =
+        rawEndpointPath.startsWith('/') ? rawEndpointPath : '/$rawEndpointPath';
 
     return AppConfig(
       appName: _pickString([json['appName'], json['name']], defaultAppName),

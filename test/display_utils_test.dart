@@ -65,7 +65,8 @@ void main() {
       expect(requestedModeId, 2); // Mode 2 has 120Hz
     });
 
-    test('Android getActiveRefreshRate and getHighestRefreshRate return correct values',
+    test(
+        'Android getActiveRefreshRate and getHighestRefreshRate return correct values',
         () async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
 

@@ -237,8 +237,8 @@ class ArticleCardSkeleton extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 900),
         child: Card(
-          margin: margin ??
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          margin:
+              margin ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Row(

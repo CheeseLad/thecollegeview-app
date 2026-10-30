@@ -62,7 +62,9 @@ class ArticleProvider with ChangeNotifier {
     final articles = await compute(_parseArticlesFromJsonBody, body);
     for (final article in articles) {
       final mediaUrl = article.embeddedFeaturedMediaUrl;
-      if (mediaUrl != null && mediaUrl.isNotEmpty && article.featuredMedia > 0) {
+      if (mediaUrl != null &&
+          mediaUrl.isNotEmpty &&
+          article.featuredMedia > 0) {
         WpApiService.cacheFeaturedMediaUrl(article.featuredMedia, mediaUrl);
       }
     }
@@ -299,9 +301,8 @@ class ArticleProvider with ChangeNotifier {
     for (final existing in _articles) {
       final existingUri = Uri.tryParse(existing.link);
       if (existingUri != null) {
-        final existingSegments = existingUri.pathSegments
-            .where((s) => s.trim().isNotEmpty)
-            .toList();
+        final existingSegments =
+            existingUri.pathSegments.where((s) => s.trim().isNotEmpty).toList();
         if (existingSegments.isNotEmpty &&
             existingSegments.last.toLowerCase() == lastSegment) {
           return existing;
@@ -349,8 +350,7 @@ class ArticleProvider with ChangeNotifier {
     int page = 1,
     int? perPage,
   }) async {
-    final effectivePerPage =
-        perPage ?? AppConfig.instance.searchResultsPerPage;
+    final effectivePerPage = perPage ?? AppConfig.instance.searchResultsPerPage;
     try {
       return await _fetchPostsList({
         'tags': '$tagId',

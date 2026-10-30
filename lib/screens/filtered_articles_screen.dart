@@ -199,4 +199,3 @@ class _AuthorHeader extends StatelessWidget {
     );
   }
 }
-

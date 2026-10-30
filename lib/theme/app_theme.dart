@@ -126,9 +126,21 @@ class AppTheme {
   }
 
   static String _toCssHex(Color color) {
-    final r = (color.r * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0');
-    final g = (color.g * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0');
-    final b = (color.b * 255.0).round().clamp(0, 255).toRadixString(16).padLeft(2, '0');
+    final r = (color.r * 255.0)
+        .round()
+        .clamp(0, 255)
+        .toRadixString(16)
+        .padLeft(2, '0');
+    final g = (color.g * 255.0)
+        .round()
+        .clamp(0, 255)
+        .toRadixString(16)
+        .padLeft(2, '0');
+    final b = (color.b * 255.0)
+        .round()
+        .clamp(0, 255)
+        .toRadixString(16)
+        .padLeft(2, '0');
     return '#$r$g$b';
   }
 

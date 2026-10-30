@@ -80,9 +80,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
               height: 220,
             ));
     final hasResolvedAuthor = _authorName.isNotEmpty;
-    final hasResolvedTags = WpApiService.getInitialTagNames(
-            widget.article.tags, widget.tagNames) !=
-        null;
+    final hasResolvedTags =
+        WpApiService.getInitialTagNames(widget.article.tags, widget.tagNames) !=
+            null;
 
     if (hasResolvedMedia && hasResolvedAuthor && hasResolvedTags) {
       _isReady = true;
@@ -489,8 +489,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                       ),
                                       child: NetworkImageWithFallback(
                                         imageUrl: _featuredMediaUrl,
-                                        fallbackAssetPath:
-                                            config.logoAssetPath,
+                                        fallbackAssetPath: config.logoAssetPath,
                                         width: double.infinity,
                                         height: 220,
                                         fit: BoxFit.cover,
@@ -525,10 +524,10 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                                 ?.querySelector('figcaption')
                                                 ?.text
                                                 .trim();
-                                            final caption = (alt != null &&
-                                                    alt.isNotEmpty)
-                                                ? alt
-                                                : figCaption;
+                                            final caption =
+                                                (alt != null && alt.isNotEmpty)
+                                                    ? alt
+                                                    : figCaption;
                                             return GestureDetector(
                                               onTap: () =>
                                                   FullscreenImageViewer.show(

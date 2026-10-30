@@ -142,8 +142,7 @@ class NetworkImageWithFallback extends StatelessWidget {
     }
 
     if (width == double.infinity && hasFiniteHeight) {
-      final screenWidth =
-          MediaQuery.sizeOf(context).width.clamp(100.0, 900.0);
+      final screenWidth = MediaQuery.sizeOf(context).width.clamp(100.0, 900.0);
       final targetLogicalWidth = math.max(screenWidth, height * 1.8);
       return (targetLogicalWidth * dpr).round();
     }

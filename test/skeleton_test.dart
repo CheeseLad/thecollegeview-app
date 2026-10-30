@@ -9,7 +9,8 @@ import 'package:thecollegeview/models/article.dart';
 
 void main() {
   group('Skeleton Components Tests', () {
-    testWidgets('SkeletonBox renders standalone without ancestral SkeletonShimmer',
+    testWidgets(
+        'SkeletonBox renders standalone without ancestral SkeletonShimmer',
         (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
@@ -50,7 +51,8 @@ void main() {
 
       expect(find.byType(SkeletonShimmer), findsOneWidget);
       expect(find.byType(SkeletonShimmerScope), findsOneWidget);
-      expect(find.byType(SkeletonBox), findsNWidgets(2)); // SkeletonLine uses SkeletonBox
+      expect(find.byType(SkeletonBox),
+          findsNWidgets(2)); // SkeletonLine uses SkeletonBox
       expect(find.byType(SkeletonLine), findsOneWidget);
     });
 
@@ -70,7 +72,8 @@ void main() {
       expect(find.byType(SkeletonLine), findsWidgets);
     });
 
-    testWidgets('ArticleListSkeleton renders multiple ArticleCardSkeletons in ListView',
+    testWidgets(
+        'ArticleListSkeleton renders multiple ArticleCardSkeletons in ListView',
         (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
@@ -151,7 +154,8 @@ void main() {
   });
 
   group('ArticleList Skeleton Integration Tests', () {
-    testWidgets('ArticleList displays ArticleListSkeleton when loading with empty list',
+    testWidgets(
+        'ArticleList displays ArticleListSkeleton when loading with empty list',
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -172,7 +176,8 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets('ArticleList shows ArticleCardSkeleton at bottom for pagination loading',
+    testWidgets(
+        'ArticleList shows ArticleCardSkeleton at bottom for pagination loading',
         (tester) async {
       final dummyArticles = List<Article>.generate(
         3,
@@ -210,7 +215,8 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets('ArticleCard stays as ArticleCardSkeleton until author and image resolve',
+    testWidgets(
+        'ArticleCard stays as ArticleCardSkeleton until author and image resolve',
         (tester) async {
       const unresolvedArticle = Article(
         id: 999,
