@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../config/app_config.dart';
 import '../services/cache_service.dart';
 
 class ThemeProvider extends ChangeNotifier {
@@ -8,12 +9,12 @@ class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'themeMode';
   static const String _fontSizeKey = 'articleFontSize';
 
-  static const double minFontSize = 13.0;
-  static const double defaultFontSize = 16.0;
-  static const double maxFontSize = 24.0;
+  static double get minFontSize => AppConfig.instance.minFontSize;
+  static double get defaultFontSize => AppConfig.instance.defaultFontSize;
+  static double get maxFontSize => AppConfig.instance.maxFontSize;
 
   ThemeMode _themeMode = ThemeMode.system;
-  double _articleFontSize = defaultFontSize;
+  double _articleFontSize = AppConfig.instance.defaultFontSize;
   Box? _box;
 
   ThemeMode get themeMode => _themeMode;
@@ -215,54 +216,60 @@ class AppTheme {
     }
   }
 
-  static final ThemeData lightTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.light,
-    scaffoldBackgroundColor: const Color.fromARGB(255, 195, 195, 196),
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF1976D2),
+  static ThemeData get lightTheme {
+    final seedColor = AppConfig.instance.primarySeedColor;
+    return ThemeData(
+      useMaterial3: true,
       brightness: Brightness.light,
-    ),
-    cardTheme: CardThemeData(
-      color: const Color.fromARGB(255, 235, 234, 234),
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+      scaffoldBackgroundColor: const Color.fromARGB(255, 195, 195, 196),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: seedColor,
+        brightness: Brightness.light,
       ),
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
-      foregroundColor: Color(0xFF1E1E1E),
-      surfaceTintColor: Colors.transparent,
-      scrolledUnderElevation: 1,
-      shadowColor: Colors.black26,
-      systemOverlayStyle: lightSystemOverlayStyle,
-    ),
-  );
+      cardTheme: CardThemeData(
+        color: const Color.fromARGB(255, 235, 234, 234),
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white,
+        foregroundColor: Color(0xFF1E1E1E),
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 1,
+        shadowColor: Colors.black26,
+        systemOverlayStyle: lightSystemOverlayStyle,
+      ),
+    );
+  }
 
-  static final ThemeData darkTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    scaffoldBackgroundColor: const Color(0xFF121212),
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF1976D2),
+  static ThemeData get darkTheme {
+    final seedColor = AppConfig.instance.primarySeedColor;
+    return ThemeData(
+      useMaterial3: true,
       brightness: Brightness.dark,
-      surface: const Color(0xFF1E1E1E),
-    ),
-    cardTheme: CardThemeData(
-      color: const Color(0xFF1E1E1E),
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: seedColor,
+        brightness: Brightness.dark,
+        surface: const Color(0xFF1E1E1E),
       ),
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF1E1E1E),
-      foregroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      scrolledUnderElevation: 1,
-      shadowColor: Colors.black54,
-      systemOverlayStyle: darkSystemOverlayStyle,
-    ),
-  );
+      cardTheme: CardThemeData(
+        color: const Color(0xFF1E1E1E),
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF1E1E1E),
+        foregroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 1,
+        shadowColor: Colors.black54,
+        systemOverlayStyle: darkSystemOverlayStyle,
+      ),
+    );
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../config/app_config.dart';
 import '../providers/article_provider.dart';
 import '../models/article.dart';
 import '../screens/article_detail_screen.dart';
@@ -351,7 +352,7 @@ class _ArticleCardState extends State<ArticleCard> {
                 children: [
                   NetworkImageWithFallback(
                     imageUrl: details.imageUrl,
-                    fallbackAssetPath: 'assets/logo.png',
+                    fallbackAssetPath: AppConfig.instance.logoAssetPath,
                     width: 110,
                     height: 110,
                     borderRadius: BorderRadius.circular(8),

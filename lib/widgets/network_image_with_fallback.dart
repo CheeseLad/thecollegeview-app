@@ -76,6 +76,11 @@ class NetworkImageWithFallback extends StatelessWidget {
     final key = _cacheKey(trimmedUrl, targetCacheWidth);
     if (_preloadedKeys.contains(key)) return;
 
+    if (kIsWeb && AppConfig.instance.forceOfflineMode) {
+      _preloadedKeys.add(key);
+      return;
+    }
+
     final ImageProvider baseProvider = kIsWeb
         ? NetworkImage(effectiveUrl)
         : CachedNetworkImageProvider(effectiveUrl);
@@ -85,12 +90,16 @@ class NetworkImageWithFallback extends StatelessWidget {
       baseProvider,
     );
 
+    final timeout = AppConfig.instance.forceOfflineMode
+        ? const Duration(milliseconds: 400)
+        : const Duration(seconds: 6);
+
     try {
       await precacheImage(
         provider,
         context,
         onError: (_, __) {},
-      ).timeout(const Duration(seconds: 6));
+      ).timeout(timeout);
     } catch (_) {
       // Fall back gracefully if the image fails or times out.
     } finally {
@@ -186,7 +195,7 @@ class NetworkImageWithFallback extends StatelessWidget {
   Widget build(BuildContext context) {
     final trimmedUrl = imageUrl.trim();
 
-    if (trimmedUrl.isEmpty) {
+    if (trimmedUrl.isEmpty || (kIsWeb && AppConfig.instance.forceOfflineMode)) {
       Widget fallback = _buildFallback(context);
       if (borderRadius != null) {
         fallback = ClipRRect(

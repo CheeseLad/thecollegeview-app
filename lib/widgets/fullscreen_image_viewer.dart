@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
 import '../theme/app_theme.dart';
 import 'network_image_with_fallback.dart';
 
@@ -101,7 +102,7 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                   child: Center(
                     child: NetworkImageWithFallback(
                       imageUrl: widget.imageUrl,
-                      fallbackAssetPath: 'assets/logo.png',
+                      fallbackAssetPath: AppConfig.instance.logoAssetPath,
                       fit: BoxFit.contain,
                     ),
                   ),

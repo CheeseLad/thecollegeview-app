@@ -9,7 +9,8 @@ class ContactScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final contacts = AppConfig.instance.contacts;
+    final config = AppConfig.instance;
+    final contacts = config.contacts;
 
     return Scaffold(
       appBar: AppBar(
@@ -33,15 +34,17 @@ class ContactScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Please email press releases to the appropriate section only.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      height: 1.5,
+                  if (config.contactIntroText.isNotEmpty) ...[
+                    Text(
+                      config.contactIntroText,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        height: 1.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 30),
+                    const SizedBox(height: 30),
+                  ],
                   ...contacts.map(
                     (contact) => _buildContactCard(context, contact),
                   ),

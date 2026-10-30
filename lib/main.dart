@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'config/app_config.dart';
 import 'theme/app_theme.dart';
 import 'services/cache_service.dart';
+import 'services/wp_api_service.dart';
 import 'providers/article_provider.dart';
 import 'providers/saved_articles_provider.dart';
 import 'screens/articles_screen.dart';
@@ -22,6 +23,7 @@ Future<void> main() async {
     AppConfig.load(),
     Hive.initFlutter(),
   ]);
+  WpApiService.isOffline.value = AppConfig.instance.forceOfflineMode;
 
   final savedArticlesProvider = SavedArticlesProvider();
   final themeProvider = ThemeProvider();

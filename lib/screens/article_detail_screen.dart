@@ -382,6 +382,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final config = AppConfig.instance;
     final formattedDate = widget.article.formattedDate;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -395,12 +396,13 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
             tooltip: 'Text size',
             onPressed: () => _showFontSizeSheet(context),
           ),
-          IconButton(
-            key: _shareButtonKey,
-            icon: const FaIcon(FontAwesomeIcons.arrowUpFromBracket, size: 19),
-            tooltip: 'Share',
-            onPressed: _shareArticle,
-          ),
+          if (config.enableShareButton)
+            IconButton(
+              key: _shareButtonKey,
+              icon: const FaIcon(FontAwesomeIcons.arrowUpFromBracket, size: 19),
+              tooltip: 'Share',
+              onPressed: _shareArticle,
+            ),
           Padding(
             padding: const EdgeInsets.only(right: 4.0),
             child: Selector<SavedArticlesProvider, bool>(
@@ -487,7 +489,8 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                       ),
                                       child: NetworkImageWithFallback(
                                         imageUrl: _featuredMediaUrl,
-                                        fallbackAssetPath: 'assets/logo.png',
+                                        fallbackAssetPath:
+                                            config.logoAssetPath,
                                         width: double.infinity,
                                         height: 220,
                                         fit: BoxFit.cover,
@@ -536,7 +539,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                               child: NetworkImageWithFallback(
                                                 imageUrl: src,
                                                 fallbackAssetPath:
-                                                    'assets/logo.png',
+                                                    config.logoAssetPath,
                                                 borderRadius:
                                                     BorderRadius.circular(10),
                                               ),
@@ -549,15 +552,17 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                   },
                                 ),
                                 const SizedBox(height: 10),
-                                if (_tagNames.isNotEmpty)
+                                if (config.enableTagChips &&
+                                    _tagNames.isNotEmpty)
                                   _buildTagChips(context, _tagNames),
                               ],
                             ),
                           ),
-                          _RelatedArticlesSection(
-                            article: widget.article,
-                            categoryName: widget.categoryName,
-                          ),
+                          if (config.enableRelatedArticles)
+                            _RelatedArticlesSection(
+                              article: widget.article,
+                              categoryName: widget.categoryName,
+                            ),
                         ],
                       ),
                     ),

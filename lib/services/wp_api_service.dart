@@ -10,14 +10,16 @@ import 'cache_service.dart';
 class WpApiService {
   static String get fallbackAuthorName => AppConfig.instance.fallbackAuthorName;
   static String get _authorInfoEndpoint =>
-      '${AppConfig.instance.apiBase}/get-subheading';
+      '${AppConfig.instance.apiBase}${AppConfig.instance.authorSubheadingEndpointPath}';
 
   static final CacheService _cache = CacheService();
   static final http.Client _client = http.Client();
 
   /// Reactive indicator of whether the most recent network request failed and
-  /// fell back to offline/cached mode.
-  static final ValueNotifier<bool> isOffline = ValueNotifier<bool>(false);
+  /// fell back to offline/cached mode (or offline mode is forced via config).
+  static final ValueNotifier<bool> isOffline = ValueNotifier<bool>(
+    AppConfig.instance.forceOfflineMode,
+  );
 
   static final Map<int, String> _mediaUrlMemoryCache = {};
   static final Map<String, String> _authorMemoryCache = {};
@@ -119,6 +121,17 @@ class WpApiService {
     Map<String, String>? headers,
     bool forceRefresh = false,
   }) async {
+    if (AppConfig.instance.forceOfflineMode) {
+      if (!isOffline.value) {
+        isOffline.value = true;
+      }
+      final stale = _cache.getCached(uri, allowStale: true);
+      if (stale != null) {
+        return stale;
+      }
+      throw Exception('Offline mode is enabled in app_config.json');
+    }
+
     if (!forceRefresh) {
       final cached = _cache.getCached(uri, allowStale: false);
       if (cached != null) {
@@ -155,7 +168,7 @@ class WpApiService {
     try {
       final response = await _client
           .get(uri, headers: headers)
-          .timeout(const Duration(seconds: 12));
+          .timeout(Duration(seconds: AppConfig.instance.httpTimeoutSeconds));
       if (response.statusCode == 200) {
         if (isOffline.value) {
           isOffline.value = false;
@@ -355,10 +368,14 @@ class WpApiService {
   }
 
   static Future<String> fetchAboutHtml() async {
+    final config = AppConfig.instance;
+    if (!config.useRemoteAboutPage) {
+      return config.aboutHtml;
+    }
     try {
       final response = await get(
         Uri.parse(
-            '${AppConfig.instance.apiBase}/wp-json/wp/v2/pages?slug=about'),
+            '${config.apiBase}/wp-json/wp/v2/pages?slug=${Uri.encodeQueryComponent(config.aboutPageSlug)}'),
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -370,6 +387,6 @@ class WpApiService {
         }
       }
     } catch (_) {}
-    return AppConfig.instance.aboutHtml;
+    return config.aboutHtml;
   }
 }

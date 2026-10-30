@@ -124,7 +124,7 @@ class CVNavigationDrawer extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   child: Center(
                     child: Image.asset(
-                      'assets/logo.png',
+                      config.logoAssetPath,
                       fit: BoxFit.contain,
                       cacheWidth: (260 *
                               MediaQuery.devicePixelRatioOf(context)
@@ -292,23 +292,51 @@ class CVNavigationDrawer extends StatelessWidget {
             top: false,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
-                  _SocialMediaIcon(
-                    icon: FontAwesomeIcons.instagram,
-                    url: config.instagramUrl,
-                  ),
-                  const SizedBox(width: 10),
-                  _SocialMediaIcon(
-                    icon: FontAwesomeIcons.whatsapp,
-                    url: config.whatsappUrl,
-                  ),
-                  const SizedBox(width: 10),
-                  _SocialMediaIcon(
-                    icon: FontAwesomeIcons.globe,
-                    url: config.website,
-                  ),
+                  if (config.instagramUrl.isNotEmpty)
+                    _SocialMediaIcon(
+                      icon: FontAwesomeIcons.instagram,
+                      url: config.instagramUrl,
+                    ),
+                  if (config.whatsappUrl.isNotEmpty)
+                    _SocialMediaIcon(
+                      icon: FontAwesomeIcons.whatsapp,
+                      url: config.whatsappUrl,
+                    ),
+                  if (config.tiktokUrl.isNotEmpty)
+                    _SocialMediaIcon(
+                      icon: FontAwesomeIcons.tiktok,
+                      url: config.tiktokUrl,
+                    ),
+                  if (config.xUrl.isNotEmpty)
+                    _SocialMediaIcon(
+                      icon: FontAwesomeIcons.xTwitter,
+                      url: config.xUrl,
+                    ),
+                  if (config.linkedinUrl.isNotEmpty)
+                    _SocialMediaIcon(
+                      icon: FontAwesomeIcons.linkedin,
+                      url: config.linkedinUrl,
+                    ),
+                  if (config.youtubeUrl.isNotEmpty)
+                    _SocialMediaIcon(
+                      icon: FontAwesomeIcons.youtube,
+                      url: config.youtubeUrl,
+                    ),
+                  if (config.spotifyUrl.isNotEmpty)
+                    _SocialMediaIcon(
+                      icon: FontAwesomeIcons.spotify,
+                      url: config.spotifyUrl,
+                    ),
+                  if (config.website.isNotEmpty)
+                    _SocialMediaIcon(
+                      icon: FontAwesomeIcons.globe,
+                      url: config.website,
+                    ),
                 ],
               ),
             ),

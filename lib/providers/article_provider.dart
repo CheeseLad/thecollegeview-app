@@ -84,7 +84,7 @@ class ArticleProvider with ChangeNotifier {
       final config = await CategoryConfig.load();
 
       final url = '${AppConfig.instance.apiBase}/wp-json/wp/v2/categories'
-          '?per_page=100'
+          '?per_page=${AppConfig.instance.categoriesPerPage}'
           '&_fields=id,name,slug,parent,count';
 
       final response = await WpApiService.get(Uri.parse(url));
@@ -144,9 +144,10 @@ class ArticleProvider with ChangeNotifier {
     _loading = true;
     notifyListeners();
 
+    final perPage = AppConfig.instance.postsPerPage;
     final uri = _buildPostsUri({
       'page': '$_currentPage',
-      'per_page': '10',
+      'per_page': '$perPage',
       if (_selectedCategory != null) 'categories': '$_selectedCategory',
     });
 
@@ -171,7 +172,7 @@ class ArticleProvider with ChangeNotifier {
             response.headers['X-WP-TotalPages'];
         if (totalPagesHeader != null) {
           _totalPages = int.tryParse(totalPagesHeader) ?? 1;
-        } else if (loadedArticles.length == 10) {
+        } else if (loadedArticles.length == perPage) {
           if (_currentPage + 1 > _totalPages) {
             _totalPages = _currentPage + 1;
           }
@@ -200,7 +201,7 @@ class ArticleProvider with ChangeNotifier {
     try {
       return await _fetchPostsList({
         'search': query,
-        'per_page': '20',
+        'per_page': '${AppConfig.instance.searchResultsPerPage}',
       });
     } catch (_) {
       return [];
@@ -235,7 +236,7 @@ class ArticleProvider with ChangeNotifier {
         final response = await WpApiService.get(
           _buildPostsUri({
             'author': '$authorId',
-            'per_page': '20',
+            'per_page': '${AppConfig.instance.searchResultsPerPage}',
             '_embed': 'author,wp:featuredmedia',
           }),
         );
@@ -290,18 +291,7 @@ class ArticleProvider with ChangeNotifier {
     if (segments.isEmpty) return null;
 
     final lastSegment = segments.last.trim().toLowerCase();
-    const nonArticleSlugs = {
-      'about',
-      'contact',
-      'category',
-      'tag',
-      'author',
-      'search',
-      'wp-admin',
-      'wp-login.php',
-      'feed',
-    };
-    if (nonArticleSlugs.contains(lastSegment)) {
+    if (AppConfig.instance.nonArticleSlugs.contains(lastSegment)) {
       return null;
     }
 
@@ -357,13 +347,15 @@ class ArticleProvider with ChangeNotifier {
   Future<List<Article>> getArticlesByTag(
     int tagId, {
     int page = 1,
-    int perPage = 20,
+    int? perPage,
   }) async {
+    final effectivePerPage =
+        perPage ?? AppConfig.instance.searchResultsPerPage;
     try {
       return await _fetchPostsList({
         'tags': '$tagId',
         'page': '$page',
-        'per_page': '$perPage',
+        'per_page': '$effectivePerPage',
       });
     } catch (_) {
       return [];
@@ -396,13 +388,14 @@ class ArticleProvider with ChangeNotifier {
     if (article.tags.isEmpty) return [];
 
     try {
+      final config = AppConfig.instance;
       final results = await _fetchPostsList({
         'tags': article.tags.take(5).join(','),
-        'per_page': '10',
+        'per_page': '${config.relatedArticlesFetchPool}',
         'exclude': '${article.id}',
       });
       results.shuffle(Random());
-      return results.take(3).toList();
+      return results.take(config.relatedArticlesCount).toList();
     } catch (_) {
       return [];
     }

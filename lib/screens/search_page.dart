@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config/app_config.dart';
 import '../models/article.dart';
 import '../providers/article_provider.dart';
 import '../widgets/article_list.dart';
@@ -43,18 +44,21 @@ class SearchPageState extends State<SearchPage> {
       _isLoading = true;
     });
 
-    _debounceTimer = Timer(const Duration(milliseconds: 350), () async {
-      final articleProvider =
-          Provider.of<ArticleProvider>(context, listen: false);
-      final results = await articleProvider.searchArticles(query);
+    _debounceTimer = Timer(
+      Duration(milliseconds: AppConfig.instance.searchDebounceMs),
+      () async {
+        final articleProvider =
+            Provider.of<ArticleProvider>(context, listen: false);
+        final results = await articleProvider.searchArticles(query);
 
-      if (!mounted) return;
-      setState(() {
-        _filteredArticles = results;
-        _isLoading = false;
-        _hasSearched = true;
-      });
-    });
+        if (!mounted) return;
+        setState(() {
+          _filteredArticles = results;
+          _isLoading = false;
+          _hasSearched = true;
+        });
+      },
+    );
   }
 
   void _clearSearch() {

@@ -1,11 +1,12 @@
 import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
+import '../config/app_config.dart';
 
 class CacheService {
   static const String _boxName = 'apiCache';
-  static const int _freshTtlMs = 3600000; // 1 hour fresh cache
-  static const int _maxStaleTtlMs = 604800000; // 7 days offline fallback cache
-  static const int _maxEntries = 150;
+  static int get _freshTtlMs => AppConfig.instance.freshCacheTtlMs;
+  static int get _maxStaleTtlMs => AppConfig.instance.staleCacheTtlMs;
+  static int get _maxEntries => AppConfig.instance.maxCacheEntries;
   static final CacheService _instance = CacheService._internal();
   late Box<Map> _box;
 
