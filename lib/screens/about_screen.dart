@@ -4,6 +4,7 @@ import '../config/app_config.dart';
 import '../services/wp_api_service.dart';
 import '../utils/deep_link_handler.dart';
 import '../widgets/cv_navigation_drawer.dart';
+import '../widgets/skeleton.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -28,9 +29,7 @@ class _AboutScreenState extends State<AboutScreen> {
         future: _aboutHtmlFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const AboutScreenSkeleton();
           }
 
           final htmlContent = snapshot.data ?? config.aboutHtml;

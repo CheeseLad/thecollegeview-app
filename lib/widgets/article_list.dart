@@ -6,6 +6,7 @@ import '../models/article.dart';
 import '../screens/article_detail_screen.dart';
 import '../services/wp_api_service.dart';
 import '../widgets/network_image_with_fallback.dart';
+import 'skeleton.dart';
 
 class ArticleList extends StatefulWidget {
   final String categoryName;
@@ -77,7 +78,7 @@ class _ArticleListState extends State<ArticleList> {
     final error = widget.errorMessage ?? (usesCustomList ? null : articleProvider.error);
 
     if (loading && list.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const ArticleListSkeleton();
     }
 
     if (error != null && list.isEmpty) {
@@ -165,8 +166,8 @@ class _ArticleListState extends State<ArticleList> {
       itemBuilder: (context, index) {
         if (index >= list.length) {
           return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
+            padding: EdgeInsets.symmetric(vertical: 4.0),
+            child: ArticleCardSkeleton(),
           );
         }
         final article = list[index];

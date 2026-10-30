@@ -4,6 +4,7 @@ import '../config/app_config.dart';
 import '../models/article.dart';
 import '../providers/article_provider.dart';
 import '../utils/deep_link_handler.dart';
+import '../widgets/skeleton.dart';
 import 'article_detail_screen.dart';
 
 class DeepLinkArticleScreen extends StatefulWidget {
@@ -52,7 +53,7 @@ class _DeepLinkArticleScreenState extends State<DeepLinkArticleScreen> {
     if (_loading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Loading Article...')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const ArticleDetailSkeleton(),
       );
     }
 

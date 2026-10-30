@@ -14,6 +14,7 @@ import '../widgets/network_image_with_fallback.dart';
 import '../widgets/article_list.dart';
 import '../widgets/fullscreen_image_viewer.dart';
 import '../widgets/offline_banner.dart';
+import '../widgets/skeleton.dart';
 import 'filtered_articles_screen.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
@@ -381,11 +382,14 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                               if (author.isEmpty) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2),
+                                  return const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 4),
+                                    child: SkeletonBox(
+                                      width: 120,
+                                      height: 28,
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(16)),
+                                    ),
                                   );
                                 }
                                 return _buildTappableAuthorChip(
@@ -433,15 +437,13 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                   );
                                 } else if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return Container(
-                                    width: double.infinity,
-                                    height: 200,
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Center(
-                                      child: CircularProgressIndicator(),
+                                  return const Padding(
+                                    padding: EdgeInsets.only(bottom: 20),
+                                    child: SkeletonBox(
+                                      width: double.infinity,
+                                      height: 220,
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(10)),
                                     ),
                                   );
                                 }
@@ -563,10 +565,7 @@ class _RelatedArticlesSectionState extends State<_RelatedArticlesSection> {
       future: _relatedFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
-            height: 120,
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return const RelatedArticlesSkeleton();
         }
         if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();

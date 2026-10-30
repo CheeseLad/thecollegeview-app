@@ -6,7 +6,6 @@ import 'package:thecollegeview/utils/html_utils.dart';
 import 'package:thecollegeview/utils/deep_link_handler.dart';
 import 'package:thecollegeview/services/wp_api_service.dart';
 import 'package:thecollegeview/config/app_config.dart';
-import 'package:thecollegeview/config/app_urls.dart';
 import 'package:thecollegeview/theme/app_theme.dart';
 
 void main() {
@@ -68,18 +67,20 @@ void main() {
     test('Conversion to and from Map preserves all fields', () {
       final now = DateTime.now();
       final saved = SavedArticle(
-        id: 55,
-        date: '2026-10-14T10:00:00',
-        title: 'Saved Title',
-        content: '<p>Saved content</p>',
-        link: 'https://thecollegeview.ie/saved',
-        author: 7,
-        featuredMedia: 12,
+        article: const Article(
+          id: 55,
+          date: '2026-10-14T10:00:00',
+          title: 'Saved Title',
+          content: '<p>Saved content</p>',
+          link: 'https://thecollegeview.ie/saved',
+          author: 7,
+          featuredMedia: 12,
+          tags: [10, 20],
+          embeddedFeaturedMediaUrl: 'https://thecollegeview.ie/img.png',
+          embeddedAuthorName: 'Author Name',
+        ),
         categoryName: 'News',
         savedAt: now,
-        tags: [10, 20],
-        featuredMediaUrl: 'https://thecollegeview.ie/img.png',
-        authorName: 'Author Name',
         tagNames: ['News', 'Campus'],
       );
 
@@ -87,12 +88,12 @@ void main() {
       final reconstructed = SavedArticle.fromMap(map);
 
       expect(reconstructed.id, 55);
-      expect(reconstructed.title, 'Saved Title');
+      expect(reconstructed.article.title, 'Saved Title');
       expect(reconstructed.categoryName, 'News');
-      expect(
-          reconstructed.featuredMediaUrl, 'https://thecollegeview.ie/img.png');
-      expect(reconstructed.authorName, 'Author Name');
-      expect(reconstructed.tags, [10, 20]);
+      expect(reconstructed.article.embeddedFeaturedMediaUrl,
+          'https://thecollegeview.ie/img.png');
+      expect(reconstructed.article.embeddedAuthorName, 'Author Name');
+      expect(reconstructed.article.tags, [10, 20]);
       expect(reconstructed.tagNames, ['News', 'Campus']);
       expect(reconstructed.savedAt.year, now.year);
     });
@@ -151,7 +152,7 @@ void main() {
 
     test('Privacy policy URL is properly configured', () {
       expect(
-        AppUrls.privacyPolicy,
+        AppConfig.instance.privacyPolicyUrl,
         'https://thecollegeview.ie/the-college-view-mobile-app-privacy-policy',
       );
     });

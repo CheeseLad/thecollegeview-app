@@ -9,9 +9,12 @@ import 'providers/saved_articles_provider.dart';
 import 'screens/articles_screen.dart';
 import 'screens/article_detail_screen.dart';
 import 'utils/deep_link_handler.dart';
+import 'utils/display_utils.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await DisplayUtils.enableHighRefreshRate();
 
   await AppConfig.load();
 
@@ -31,7 +34,7 @@ Future<void> main() async {
   ));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final SavedArticlesProvider savedArticlesProvider;
   final ThemeProvider themeProvider;
 
@@ -40,6 +43,32 @@ class MyApp extends StatelessWidget {
     required this.savedArticlesProvider,
     required this.themeProvider,
   });
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    DisplayUtils.enableHighRefreshRate();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      DisplayUtils.enableHighRefreshRate();
+    }
+  }
 
   Route<dynamic> _onGenerateRoute(RouteSettings settings) {
     final routeName = (settings.name ?? '/').trim();
@@ -75,8 +104,8 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ArticleProvider()),
-        ChangeNotifierProvider.value(value: savedArticlesProvider),
-        ChangeNotifierProvider.value(value: themeProvider),
+        ChangeNotifierProvider.value(value: widget.savedArticlesProvider),
+        ChangeNotifierProvider.value(value: widget.themeProvider),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

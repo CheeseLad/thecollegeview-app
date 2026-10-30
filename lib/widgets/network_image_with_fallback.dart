@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'skeleton.dart';
 import '../config/app_config.dart';
 
 class NetworkImageWithFallback extends StatelessWidget {
@@ -55,20 +56,10 @@ class NetworkImageWithFallback extends StatelessWidget {
   }
 
   Widget _buildPlaceholder(BuildContext context) {
-    return Container(
+    return SkeletonBox(
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: borderRadius,
-      ),
-      child: const Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
+      borderRadius: borderRadius,
     );
   }
 
