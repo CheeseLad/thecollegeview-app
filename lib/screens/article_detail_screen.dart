@@ -263,15 +263,19 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     }
 
     try {
-      await Share.shareUri(
-        uri,
-        sharePositionOrigin: sharePositionOrigin,
+      await SharePlus.instance.share(
+        ShareParams(
+          uri: uri,
+          sharePositionOrigin: sharePositionOrigin,
+        ),
       );
     } catch (_) {
       try {
-        await Share.share(
-          link,
-          sharePositionOrigin: sharePositionOrigin,
+        await SharePlus.instance.share(
+          ShareParams(
+            text: link,
+            sharePositionOrigin: sharePositionOrigin,
+          ),
         );
       } catch (_) {}
     }
