@@ -86,13 +86,16 @@ class CVNavigationDrawer extends StatelessWidget {
   Widget _buildSectionLabel(BuildContext context, String label) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 12, 16, 4),
-      child: Text(
-        label.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.1,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: Semantics(
+        header: true,
+        child: Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.1,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
@@ -126,6 +129,7 @@ class CVNavigationDrawer extends StatelessWidget {
                     child: Image.asset(
                       config.logoAssetPath,
                       fit: BoxFit.contain,
+                      semanticLabel: '${config.appName} logo',
                       cacheWidth: (260 *
                               MediaQuery.devicePixelRatioOf(context)
                                   .clamp(1.0, 3.5))
@@ -164,25 +168,30 @@ class CVNavigationDrawer extends StatelessWidget {
                       title: 'Saved Articles',
                       selected: isSavedSelected,
                       trailing: savedCount > 0
-                          ? Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSavedSelected
-                                    ? colorScheme.primary
-                                    : colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '$savedCount',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                          ? Semantics(
+                              label:
+                                  '$savedCount ${savedCount == 1 ? 'saved article' : 'saved articles'}',
+                              excludeSemantics: true,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
                                   color: isSavedSelected
-                                      ? colorScheme.onPrimary
-                                      : colorScheme.onSurfaceVariant,
+                                      ? colorScheme.primary
+                                      : colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '$savedCount',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isSavedSelected
+                                        ? colorScheme.onPrimary
+                                        : colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ),
                             )
@@ -252,6 +261,7 @@ class CVNavigationDrawer extends StatelessWidget {
                   trailing: Icon(
                     Icons.open_in_new,
                     size: 16,
+                    semanticLabel: 'Opens in external browser',
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   onTap: () {
@@ -300,41 +310,49 @@ class CVNavigationDrawer extends StatelessWidget {
                   if (config.instagramUrl.isNotEmpty)
                     _SocialMediaIcon(
                       icon: FontAwesomeIcons.instagram,
+                      label: 'Instagram',
                       url: config.instagramUrl,
                     ),
                   if (config.whatsappUrl.isNotEmpty)
                     _SocialMediaIcon(
                       icon: FontAwesomeIcons.whatsapp,
+                      label: 'WhatsApp',
                       url: config.whatsappUrl,
                     ),
                   if (config.tiktokUrl.isNotEmpty)
                     _SocialMediaIcon(
                       icon: FontAwesomeIcons.tiktok,
+                      label: 'TikTok',
                       url: config.tiktokUrl,
                     ),
                   if (config.xUrl.isNotEmpty)
                     _SocialMediaIcon(
                       icon: FontAwesomeIcons.xTwitter,
+                      label: 'X (Twitter)',
                       url: config.xUrl,
                     ),
                   if (config.linkedinUrl.isNotEmpty)
                     _SocialMediaIcon(
                       icon: FontAwesomeIcons.linkedin,
+                      label: 'LinkedIn',
                       url: config.linkedinUrl,
                     ),
                   if (config.youtubeUrl.isNotEmpty)
                     _SocialMediaIcon(
                       icon: FontAwesomeIcons.youtube,
+                      label: 'YouTube',
                       url: config.youtubeUrl,
                     ),
                   if (config.spotifyUrl.isNotEmpty)
                     _SocialMediaIcon(
                       icon: FontAwesomeIcons.spotify,
+                      label: 'Spotify',
                       url: config.spotifyUrl,
                     ),
                   if (config.website.isNotEmpty)
                     _SocialMediaIcon(
                       icon: FontAwesomeIcons.globe,
+                      label: 'Website',
                       url: config.website,
                     ),
                 ],
@@ -458,22 +476,43 @@ class CVNavigationDrawer extends StatelessWidget {
 
 class _SocialMediaIcon extends StatelessWidget {
   final FaIconData icon;
+  final String label;
   final String url;
 
-  const _SocialMediaIcon({required this.icon, required this.url});
+  const _SocialMediaIcon({
+    required this.icon,
+    required this.label,
+    required this.url,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () => DeepLinkHandler.launchExternalUrl(
-        url,
-        context: context,
-        showErrorSnackBar: true,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: FaIcon(icon, size: 28),
+    return Semantics(
+      button: true,
+      link: true,
+      label: '$label (opens in external browser)',
+      excludeSemantics: true,
+      child: Tooltip(
+        message: label,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () => DeepLinkHandler.launchExternalUrl(
+            url,
+            context: context,
+            showErrorSnackBar: true,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Center(
+                widthFactor: 1.0,
+                heightFactor: 1.0,
+                child: FaIcon(icon, size: 28),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

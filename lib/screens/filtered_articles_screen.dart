@@ -160,33 +160,41 @@ class _AuthorHeader extends StatelessWidget {
           ),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                child: const Icon(Icons.person, size: 26),
+              ExcludeSemantics(
+                child: CircleAvatar(
+                  radius: 24,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  child: const Icon(Icons.person, size: 26),
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      authorName,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        authorName,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      isLoading
-                          ? 'Loading articles...'
-                          : '$articleCount ${articleCount == 1 ? 'article' : 'articles'}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colorScheme.onSurfaceVariant,
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        isLoading
+                            ? 'Loading articles...'
+                            : '$articleCount ${articleCount == 1 ? 'article' : 'articles'}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],

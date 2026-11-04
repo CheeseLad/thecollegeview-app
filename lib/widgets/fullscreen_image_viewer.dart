@@ -68,6 +68,28 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
     });
   }
 
+  void _scaleBy(double factor) {
+    final currentScale = _transformationController.value.getMaxScaleOnAxis();
+    final targetScale = (currentScale * factor).clamp(0.8, 5.0);
+    if ((targetScale - 1.0).abs() < 0.05) {
+      _resetZoom();
+      return;
+    }
+    final size = MediaQuery.sizeOf(context);
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    setState(() {
+      _transformationController.value = Matrix4.identity()
+        ..translateByDouble(
+          -centerX * (targetScale - 1),
+          -centerY * (targetScale - 1),
+          0.0,
+          1.0,
+        )
+        ..scaleByDouble(targetScale, targetScale, 1.0, 1.0);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final caption = widget.caption?.trim() ?? '';
@@ -85,6 +107,16 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.zoom_in),
+            tooltip: 'Zoom in',
+            onPressed: () => _scaleBy(1.5),
+          ),
+          IconButton(
+            icon: const Icon(Icons.zoom_out),
+            tooltip: 'Zoom out',
+            onPressed: () => _scaleBy(1 / 1.5),
+          ),
           IconButton(
             icon: const Icon(Icons.zoom_out_map),
             tooltip: 'Reset zoom',
@@ -109,6 +141,9 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
                       imageUrl: widget.imageUrl,
                       fallbackAssetPath: AppConfig.instance.logoAssetPath,
                       fit: BoxFit.contain,
+                      semanticLabel: caption.isNotEmpty
+                          ? caption
+                          : 'Fullscreen article image',
                     ),
                   ),
                 ),

@@ -72,16 +72,21 @@ class _DeepLinkArticleScreenState extends State<DeepLinkArticleScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.link_off,
-                size: 64,
-                color: Theme.of(context).colorScheme.outline,
+              ExcludeSemantics(
+                child: Icon(
+                  Icons.link_off,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Could not open this link inside the app.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Semantics(
+                header: true,
+                child: const Text(
+                  'Could not open this link inside the app.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(

@@ -45,6 +45,16 @@ class Article {
     return _formattedDateCache.putIfAbsent(date, () => _formatRawDate(date));
   }
 
+  /// Returns the formatted publication date without decorative emoji prefixes,
+  /// suitable for screen-reader `semanticsLabel` announcements.
+  String get plainFormattedDate {
+    final formatted = formattedDate;
+    if (formatted.startsWith('⏰ ')) {
+      return formatted.substring(2).trim();
+    }
+    return formatted;
+  }
+
   Article copyWith({
     String? embeddedFeaturedMediaUrl,
     String? embeddedAuthorName,

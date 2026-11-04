@@ -158,11 +158,14 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Reader Font Size',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        Semantics(
+                          header: true,
+                          child: const Text(
+                            'Reader Font Size',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         Text(
@@ -196,7 +199,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        const Text('A', style: TextStyle(fontSize: 13)),
+                        const ExcludeSemantics(
+                          child: Text('A', style: TextStyle(fontSize: 13)),
+                        ),
                         Expanded(
                           child: Slider(
                             value: themeProvider.articleFontSize,
@@ -204,14 +209,18 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                             max: ThemeProvider.maxFontSize,
                             divisions: 11,
                             label: '${themeProvider.articleFontSize.round()}',
+                            semanticFormatterCallback: (value) =>
+                                '${value.round()} point font size',
                             onChanged: themeProvider.setArticleFontSize,
                           ),
                         ),
-                        const Text(
-                          'A',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
+                        const ExcludeSemantics(
+                          child: Text(
+                            'A',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -281,101 +290,130 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     }
   }
 
-  Widget _buildTappableAuthorChip(BuildContext context, String author) {
+  Widget _buildTappableAuthorChip(
+    BuildContext context,
+    String author,
+    double fontSize,
+  ) {
     if (!AppConfig.instance.enableAuthorTap) {
       return Text(
         '👤 $author',
+        semanticsLabel: 'Author: $author',
         style: TextStyle(
-          fontSize: 16,
+          fontSize: fontSize,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       );
     }
 
     final colorScheme = Theme.of(context).colorScheme;
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: () => _openAuthorArticles(author),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(
-                '👤 $author',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: colorScheme.primary,
-                  decoration: TextDecoration.underline,
+    return Semantics(
+      button: true,
+      label: 'Author: $author, view articles by this author',
+      excludeSemantics: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => _openAuthorArticles(author),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    '👤 $author',
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: colorScheme.primary,
+                ),
+              ],
             ),
-            const SizedBox(width: 4),
-            Icon(
-              Icons.chevron_right,
-              size: 18,
-              color: colorScheme.primary,
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTagChips(BuildContext context, List<String> tagNames) {
+  Widget _buildTagChips(
+    BuildContext context,
+    List<String> tagNames,
+    double fontSize,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
+    final chipFontSize = (fontSize * 0.875).clamp(13.0, 20.0);
 
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 20),
       child: Wrap(
         spacing: 8.0,
-        runSpacing: 4.0,
+        runSpacing: 8.0,
         children: tagNames.asMap().entries.map((entry) {
           final tagId = widget.article.tags[entry.key];
           final tagName = entry.value;
 
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FilteredArticlesScreen.byTag(
-                    tagId: tagId,
-                    tagName: tagName,
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
+          return Semantics(
+            button: true,
+            label: 'Tag: $tagName',
+            excludeSemantics: true,
+            child: Material(
+              color: colorScheme.primaryContainer,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: colorScheme.primary),
+                side: BorderSide(color: colorScheme.primary),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    tagName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w500,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FilteredArticlesScreen.byTag(
+                        tagId: tagId,
+                        tagName: tagName,
+                      ),
+                    ),
+                  );
+                },
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 36),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          tagName,
+                          style: TextStyle(
+                            fontSize: chipFontSize,
+                            color: colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 12,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 12,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
-                ],
+                ),
               ),
             ),
           );
@@ -420,6 +458,8 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                         ? colorScheme.primary
                         : colorScheme.onSurfaceVariant,
                   ),
+                  tooltip:
+                      isSaved ? 'Remove from saved articles' : 'Save article',
                   onPressed: () => context
                       .read<SavedArticlesProvider>()
                       .toggleSaveArticle(widget.article, widget.categoryName),
@@ -444,67 +484,85 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                             color:
                                 AppTheme.articleDetailBackgroundColor(context),
                             padding: const EdgeInsets.fromLTRB(15, 15, 15, 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Selector<ThemeProvider, double>(
-                                  selector: (_, tp) => tp.articleFontSize,
-                                  builder: (context, articleFontSize, _) {
-                                    return Text(
-                                      widget.article.title,
+                            child: Selector<ThemeProvider, double>(
+                              selector: (_, tp) => tp.articleFontSize,
+                              builder: (context, articleFontSize, _) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Semantics(
+                                      header: true,
+                                      child: Text(
+                                        widget.article.title,
+                                        style: TextStyle(
+                                          fontSize: articleFontSize + 8,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    if (formattedDate.isNotEmpty)
+                                      Text(
+                                        formattedDate,
+                                        semanticsLabel:
+                                            'Published ${widget.article.plainFormattedDate}',
+                                        style: TextStyle(
+                                          fontSize: articleFontSize,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    _buildTappableAuthorChip(
+                                      context,
+                                      _authorName.isNotEmpty
+                                          ? _authorName
+                                          : WpApiService.fallbackAuthorName,
+                                      articleFontSize,
+                                    ),
+                                    Text(
+                                      '📂 ${widget.categoryName}',
+                                      semanticsLabel:
+                                          'Section: ${widget.categoryName}',
                                       style: TextStyle(
-                                        fontSize: articleFontSize + 8,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 10),
-                                if (formattedDate.isNotEmpty)
-                                  Text(
-                                    formattedDate,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                _buildTappableAuthorChip(
-                                  context,
-                                  _authorName.isNotEmpty
-                                      ? _authorName
-                                      : WpApiService.fallbackAuthorName,
-                                ),
-                                Text(
-                                  '📂 ${widget.categoryName}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                if (_featuredMediaUrl.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 20),
-                                    child: GestureDetector(
-                                      onTap: () => FullscreenImageViewer.show(
-                                        context,
-                                        imageUrl: _featuredMediaUrl,
-                                        caption: widget.article.title,
-                                      ),
-                                      child: NetworkImageWithFallback(
-                                        imageUrl: _featuredMediaUrl,
-                                        fallbackAssetPath: config.logoAssetPath,
-                                        width: double.infinity,
-                                        height: 220,
-                                        fit: BoxFit.cover,
-                                        borderRadius: BorderRadius.circular(10),
+                                        fontSize: articleFontSize,
+                                        color: colorScheme.onSurfaceVariant,
                                       ),
                                     ),
-                                  ),
-                                Selector<ThemeProvider, double>(
-                                  selector: (_, tp) => tp.articleFontSize,
-                                  builder: (context, articleFontSize, _) {
-                                    return HtmlWidget(
+                                    const SizedBox(height: 10),
+                                    if (_featuredMediaUrl.isNotEmpty)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 20),
+                                        child: Semantics(
+                                          button: true,
+                                          image: true,
+                                          label:
+                                              'Featured image for ${widget.article.title}. Activate to view fullscreen',
+                                          excludeSemantics: true,
+                                          child: InkWell(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            onTap: () =>
+                                                FullscreenImageViewer.show(
+                                              context,
+                                              imageUrl: _featuredMediaUrl,
+                                              caption: widget.article.title,
+                                            ),
+                                            child: NetworkImageWithFallback(
+                                              imageUrl: _featuredMediaUrl,
+                                              fallbackAssetPath:
+                                                  config.logoAssetPath,
+                                              width: double.infinity,
+                                              height: 220,
+                                              fit: BoxFit.cover,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              semanticLabel:
+                                                  widget.article.title,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    HtmlWidget(
                                       widget.article.content,
                                       renderMode: RenderMode.column,
                                       textStyle: TextStyle(
@@ -532,33 +590,52 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                                 (alt != null && alt.isNotEmpty)
                                                     ? alt
                                                     : figCaption;
-                                            return GestureDetector(
-                                              onTap: () =>
-                                                  FullscreenImageViewer.show(
-                                                context,
-                                                imageUrl: src,
-                                                caption: caption,
-                                              ),
-                                              child: NetworkImageWithFallback(
-                                                imageUrl: src,
-                                                fallbackAssetPath:
-                                                    config.logoAssetPath,
+                                            final imageLabel =
+                                                (caption != null &&
+                                                        caption.isNotEmpty)
+                                                    ? caption
+                                                    : 'Article image';
+                                            return Semantics(
+                                              button: true,
+                                              image: true,
+                                              label:
+                                                  '$imageLabel. Activate to view fullscreen',
+                                              excludeSemantics: true,
+                                              child: InkWell(
                                                 borderRadius:
                                                     BorderRadius.circular(10),
+                                                onTap: () =>
+                                                    FullscreenImageViewer.show(
+                                                  context,
+                                                  imageUrl: src,
+                                                  caption: caption,
+                                                ),
+                                                child: NetworkImageWithFallback(
+                                                  imageUrl: src,
+                                                  fallbackAssetPath:
+                                                      config.logoAssetPath,
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  semanticLabel: imageLabel,
+                                                ),
                                               ),
                                             );
                                           }
                                         }
                                         return null;
                                       },
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 10),
-                                if (config.enableTagChips &&
-                                    _tagNames.isNotEmpty)
-                                  _buildTagChips(context, _tagNames),
-                              ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    if (config.enableTagChips &&
+                                        _tagNames.isNotEmpty)
+                                      _buildTagChips(
+                                        context,
+                                        _tagNames,
+                                        articleFontSize,
+                                      ),
+                                  ],
+                                );
+                              },
                             ),
                           ),
                           if (config.enableRelatedArticles)
@@ -642,12 +719,15 @@ class _RelatedArticlesSectionState extends State<_RelatedArticlesSection> {
               padding: const EdgeInsets.fromLTRB(15, 0, 15, 8),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  'Related Articles',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    'Related Articles',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
               ),

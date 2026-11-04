@@ -24,6 +24,7 @@ class ArticlesScreen extends StatelessWidget {
             padding: const EdgeInsets.only(right: 4.0),
             child: IconButton(
               icon: const Icon(Icons.search),
+              tooltip: 'Search articles',
               onPressed: () {
                 Navigator.push(
                   context,

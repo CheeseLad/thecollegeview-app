@@ -26,17 +26,22 @@ class SavedArticlesScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.bookmark_border,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.onSurface,
+                    ExcludeSemantics(
+                      child: Icon(
+                        Icons.bookmark_border,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      'No saved articles yet',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Theme.of(context).colorScheme.onSurface,
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        'No saved articles yet',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),

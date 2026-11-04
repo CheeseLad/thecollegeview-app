@@ -33,6 +33,17 @@ class _SkeletonShimmerState extends State<SkeletonShimmer>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    if (reduceMotion && _controller.isAnimating) {
+      _controller.stop();
+    } else if (!reduceMotion && !_controller.isAnimating) {
+      _controller.repeat();
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -132,14 +143,24 @@ class _SkeletonBoxState extends State<SkeletonBox>
   void didChangeDependencies() {
     super.didChangeDependencies();
     final hasScope = SkeletonShimmerScope.of(context) != null;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     if (!hasScope && _localController == null) {
       _localController = AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 1500),
-      )..repeat();
+      );
+      if (!reduceMotion) {
+        _localController!.repeat();
+      }
     } else if (hasScope && _localController != null) {
       _localController!.dispose();
       _localController = null;
+    } else if (_localController != null) {
+      if (reduceMotion && _localController!.isAnimating) {
+        _localController!.stop();
+      } else if (!reduceMotion && !_localController!.isAnimating) {
+        _localController!.repeat();
+      }
     }
   }
 
@@ -233,55 +254,59 @@ class ArticleCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 900),
-        child: Card(
-          margin:
-              margin ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SkeletonBox(
-                  width: 110,
-                  height: 110,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 4),
-                      // Title line 1
-                      SkeletonLine(
-                        width: double.infinity,
-                        height: 16,
-                      ),
-                      SizedBox(height: 8),
-                      // Title line 2
-                      SkeletonLine(
-                        width: 180,
-                        height: 16,
-                      ),
-                      SizedBox(height: 16),
-                      // Date
-                      SkeletonLine(
-                        width: 90,
-                        height: 12,
-                      ),
-                      SizedBox(height: 8),
-                      // Author
-                      SkeletonLine(
-                        width: 130,
-                        height: 12,
-                      ),
-                    ],
+    return Semantics(
+      label: 'Loading article',
+      excludeSemantics: true,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Card(
+            margin: margin ??
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonBox(
+                    width: 110,
+                    height: 110,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 4),
+                        // Title line 1
+                        SkeletonLine(
+                          width: double.infinity,
+                          height: 16,
+                        ),
+                        SizedBox(height: 8),
+                        // Title line 2
+                        SkeletonLine(
+                          width: 180,
+                          height: 16,
+                        ),
+                        SizedBox(height: 16),
+                        // Date
+                        SkeletonLine(
+                          width: 90,
+                          height: 12,
+                        ),
+                        SizedBox(height: 8),
+                        // Author
+                        SkeletonLine(
+                          width: 130,
+                          height: 12,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -307,13 +332,17 @@ class ArticleListSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SkeletonShimmer(
-      child: ListView.builder(
-        physics: physics,
-        shrinkWrap: shrinkWrap,
-        padding: padding,
-        itemCount: itemCount,
-        itemBuilder: (context, index) => const ArticleCardSkeleton(),
+    return Semantics(
+      label: 'Loading articles',
+      excludeSemantics: true,
+      child: SkeletonShimmer(
+        child: ListView.builder(
+          physics: physics,
+          shrinkWrap: shrinkWrap,
+          padding: padding,
+          itemCount: itemCount,
+          itemBuilder: (context, index) => const ArticleCardSkeleton(),
+        ),
       ),
     );
   }
@@ -325,94 +354,98 @@ class ArticleDetailSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SkeletonShimmer(
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 900),
-            child: const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Category badge and date row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SkeletonBox(
-                        width: 90,
-                        height: 22,
-                        borderRadius: BorderRadius.all(Radius.circular(6)),
-                      ),
-                      SkeletonLine(
-                        width: 80,
-                        height: 13,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
+    return Semantics(
+      label: 'Loading article content',
+      excludeSemantics: true,
+      child: SkeletonShimmer(
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 900),
+              child: const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category badge and date row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SkeletonBox(
+                          width: 90,
+                          height: 22,
+                          borderRadius: BorderRadius.all(Radius.circular(6)),
+                        ),
+                        SkeletonLine(
+                          width: 80,
+                          height: 13,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
 
-                  // Headline lines
-                  SkeletonLine(
-                    width: double.infinity,
-                    height: 24,
-                  ),
-                  SizedBox(height: 8),
-                  SkeletonLine(
-                    width: double.infinity,
-                    height: 24,
-                  ),
-                  SizedBox(height: 8),
-                  SkeletonLine(
-                    width: 220,
-                    height: 24,
-                  ),
-                  SizedBox(height: 18),
+                    // Headline lines
+                    SkeletonLine(
+                      width: double.infinity,
+                      height: 24,
+                    ),
+                    SizedBox(height: 8),
+                    SkeletonLine(
+                      width: double.infinity,
+                      height: 24,
+                    ),
+                    SizedBox(height: 8),
+                    SkeletonLine(
+                      width: 220,
+                      height: 24,
+                    ),
+                    SizedBox(height: 18),
 
-                  // Author chip
-                  SkeletonBox(
-                    width: 140,
-                    height: 32,
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                  ),
-                  SizedBox(height: 18),
+                    // Author chip
+                    SkeletonBox(
+                      width: 140,
+                      height: 32,
+                      borderRadius: BorderRadius.all(Radius.circular(16)),
+                    ),
+                    SizedBox(height: 18),
 
-                  // Hero featured image
-                  SkeletonBox(
-                    width: double.infinity,
-                    height: 220,
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
-                  SizedBox(height: 24),
+                    // Hero featured image
+                    SkeletonBox(
+                      width: double.infinity,
+                      height: 220,
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    SizedBox(height: 24),
 
-                  // Body paragraph 1
-                  SkeletonLine(width: double.infinity, height: 14),
-                  SizedBox(height: 8),
-                  SkeletonLine(width: double.infinity, height: 14),
-                  SizedBox(height: 8),
-                  SkeletonLine(width: double.infinity, height: 14),
-                  SizedBox(height: 8),
-                  SkeletonLine(width: 200, height: 14),
-                  SizedBox(height: 20),
+                    // Body paragraph 1
+                    SkeletonLine(width: double.infinity, height: 14),
+                    SizedBox(height: 8),
+                    SkeletonLine(width: double.infinity, height: 14),
+                    SizedBox(height: 8),
+                    SkeletonLine(width: double.infinity, height: 14),
+                    SizedBox(height: 8),
+                    SkeletonLine(width: 200, height: 14),
+                    SizedBox(height: 20),
 
-                  // Body paragraph 2
-                  SkeletonLine(width: double.infinity, height: 14),
-                  SizedBox(height: 8),
-                  SkeletonLine(width: double.infinity, height: 14),
-                  SizedBox(height: 8),
-                  SkeletonLine(width: 280, height: 14),
-                  SizedBox(height: 20),
+                    // Body paragraph 2
+                    SkeletonLine(width: double.infinity, height: 14),
+                    SizedBox(height: 8),
+                    SkeletonLine(width: double.infinity, height: 14),
+                    SizedBox(height: 8),
+                    SkeletonLine(width: 280, height: 14),
+                    SizedBox(height: 20),
 
-                  // Body paragraph 3
-                  SkeletonLine(width: double.infinity, height: 14),
-                  SizedBox(height: 8),
-                  SkeletonLine(width: double.infinity, height: 14),
-                  SizedBox(height: 8),
-                  SkeletonLine(width: double.infinity, height: 14),
-                  SizedBox(height: 8),
-                  SkeletonLine(width: 160, height: 14),
-                ],
+                    // Body paragraph 3
+                    SkeletonLine(width: double.infinity, height: 14),
+                    SizedBox(height: 8),
+                    SkeletonLine(width: double.infinity, height: 14),
+                    SizedBox(height: 8),
+                    SkeletonLine(width: double.infinity, height: 14),
+                    SizedBox(height: 8),
+                    SkeletonLine(width: 160, height: 14),
+                  ],
+                ),
               ),
             ),
           ),
@@ -428,56 +461,60 @@ class AboutScreenSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SkeletonShimmer(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Card(
-            margin: const EdgeInsets.all(12),
-            elevation: 3,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // About Title
-                    SkeletonBox(
-                      width: 110,
-                      height: 32,
-                      borderRadius: BorderRadius.all(Radius.circular(6)),
-                    ),
-                    SizedBox(height: 20),
+    return Semantics(
+      label: 'Loading about page',
+      excludeSemantics: true,
+      child: SkeletonShimmer(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Card(
+              margin: const EdgeInsets.all(12),
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // About Title
+                      SkeletonBox(
+                        width: 110,
+                        height: 32,
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                      ),
+                      SizedBox(height: 20),
 
-                    // Paragraph 1
-                    SkeletonLine(width: double.infinity, height: 14),
-                    SizedBox(height: 8),
-                    SkeletonLine(width: double.infinity, height: 14),
-                    SizedBox(height: 8),
-                    SkeletonLine(width: 260, height: 14),
-                    SizedBox(height: 24),
+                      // Paragraph 1
+                      SkeletonLine(width: double.infinity, height: 14),
+                      SizedBox(height: 8),
+                      SkeletonLine(width: double.infinity, height: 14),
+                      SizedBox(height: 8),
+                      SkeletonLine(width: 260, height: 14),
+                      SizedBox(height: 24),
 
-                    // Paragraph 2
-                    SkeletonLine(width: double.infinity, height: 14),
-                    SizedBox(height: 8),
-                    SkeletonLine(width: double.infinity, height: 14),
-                    SizedBox(height: 8),
-                    SkeletonLine(width: double.infinity, height: 14),
-                    SizedBox(height: 8),
-                    SkeletonLine(width: 190, height: 14),
-                    SizedBox(height: 24),
+                      // Paragraph 2
+                      SkeletonLine(width: double.infinity, height: 14),
+                      SizedBox(height: 8),
+                      SkeletonLine(width: double.infinity, height: 14),
+                      SizedBox(height: 8),
+                      SkeletonLine(width: double.infinity, height: 14),
+                      SizedBox(height: 8),
+                      SkeletonLine(width: 190, height: 14),
+                      SizedBox(height: 24),
 
-                    // Paragraph 3
-                    SkeletonLine(width: double.infinity, height: 14),
-                    SizedBox(height: 8),
-                    SkeletonLine(width: double.infinity, height: 14),
-                    SizedBox(height: 8),
-                    SkeletonLine(width: 220, height: 14),
-                  ],
+                      // Paragraph 3
+                      SkeletonLine(width: double.infinity, height: 14),
+                      SizedBox(height: 8),
+                      SkeletonLine(width: double.infinity, height: 14),
+                      SizedBox(height: 8),
+                      SkeletonLine(width: 220, height: 14),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -494,25 +531,29 @@ class RelatedArticlesSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SkeletonShimmer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(15, 8, 15, 12),
-            child: SkeletonBox(
-              width: 160,
-              height: 22,
-              borderRadius: BorderRadius.all(Radius.circular(4)),
+    return Semantics(
+      label: 'Loading related articles',
+      excludeSemantics: true,
+      child: const SkeletonShimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(15, 8, 15, 12),
+              child: SkeletonBox(
+                width: 160,
+                height: 22,
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
             ),
-          ),
-          ArticleCardSkeleton(
-            margin: EdgeInsets.only(bottom: 10),
-          ),
-          ArticleCardSkeleton(
-            margin: EdgeInsets.only(bottom: 10),
-          ),
-        ],
+            ArticleCardSkeleton(
+              margin: EdgeInsets.only(bottom: 10),
+            ),
+            ArticleCardSkeleton(
+              margin: EdgeInsets.only(bottom: 10),
+            ),
+          ],
+        ),
       ),
     );
   }

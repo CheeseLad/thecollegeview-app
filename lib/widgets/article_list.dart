@@ -91,18 +91,23 @@ class _ArticleListState extends State<ArticleList> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
+              ExcludeSemantics(
+                child: Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
               const SizedBox(height: 16),
-              Text(
-                widget.errorTitle,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
+              Semantics(
+                header: true,
+                child: Text(
+                  widget.errorTitle,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -140,10 +145,12 @@ class _ArticleListState extends State<ArticleList> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 64,
-                color: Theme.of(context).colorScheme.outline,
+              ExcludeSemantics(
+                child: Icon(
+                  icon,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -213,6 +220,7 @@ class _ArticleCardState extends State<ArticleCard> {
 
   late _CardDetails _currentDetails;
   String? _formattedSavedDate;
+  String? _plainSavedDate;
   bool _isReady = false;
   bool _isLoading = false;
 
@@ -252,9 +260,14 @@ class _ArticleCardState extends State<ArticleCard> {
   }
 
   void _syncSavedDate() {
-    _formattedSavedDate = widget.savedAt != null
-        ? '💾 Saved ${_savedDateFormat.format(widget.savedAt!)}'
-        : null;
+    if (widget.savedAt != null) {
+      final dateText = _savedDateFormat.format(widget.savedAt!);
+      _formattedSavedDate = '💾 Saved $dateText';
+      _plainSavedDate = 'Saved $dateText';
+    } else {
+      _formattedSavedDate = null;
+      _plainSavedDate = null;
+    }
   }
 
   void _resolveOrLoadDetails() {
@@ -358,6 +371,7 @@ class _ArticleCardState extends State<ArticleCard> {
                     width: 110,
                     height: 110,
                     borderRadius: BorderRadius.circular(8),
+                    excludeFromSemantics: true,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -375,15 +389,25 @@ class _ArticleCardState extends State<ArticleCard> {
                         ),
                         const SizedBox(height: 8),
                         if (formattedDate.isNotEmpty)
-                          Text(formattedDate, style: subtextStyle),
+                          Text(
+                            formattedDate,
+                            semanticsLabel:
+                                'Published ${widget.article.plainFormattedDate}',
+                            style: subtextStyle,
+                          ),
                         if (savedDate != null) ...[
                           const SizedBox(height: 4),
-                          Text(savedDate, style: subtextStyle),
+                          Text(
+                            savedDate,
+                            semanticsLabel: _plainSavedDate,
+                            style: subtextStyle,
+                          ),
                         ],
                         if (details.authorName.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
                             '👤 ${details.authorName}',
+                            semanticsLabel: 'Author: ${details.authorName}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: subtextStyle,
@@ -398,6 +422,7 @@ class _ArticleCardState extends State<ArticleCard> {
                         Icons.bookmark,
                         color: Theme.of(context).colorScheme.primary,
                       ),
+                      tooltip: 'Remove from saved articles',
                       onPressed: widget.onRemove,
                     ),
                 ],

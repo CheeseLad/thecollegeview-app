@@ -14,6 +14,8 @@ class NetworkImageWithFallback extends StatelessWidget {
   final double? height;
   final BoxFit fit;
   final BorderRadius? borderRadius;
+  final String? semanticLabel;
+  final bool excludeFromSemantics;
 
   const NetworkImageWithFallback({
     super.key,
@@ -23,6 +25,8 @@ class NetworkImageWithFallback extends StatelessWidget {
     this.height,
     this.fit = BoxFit.cover,
     this.borderRadius,
+    this.semanticLabel,
+    this.excludeFromSemantics = false,
   });
 
   static String _normalizeImageUrl(String rawUrl) {
@@ -179,11 +183,14 @@ class NetworkImageWithFallback extends StatelessWidget {
         fit: fit,
         cacheWidth: assetCacheWidth,
         filterQuality: FilterQuality.low,
+        semanticLabel: semanticLabel,
+        excludeFromSemantics: excludeFromSemantics,
         errorBuilder: (context, error, stackTrace) {
           return Icon(
             Icons.image_not_supported,
             color: Theme.of(context).disabledColor,
             size: 36,
+            semanticLabel: excludeFromSemantics ? null : semanticLabel,
           );
         },
       ),
@@ -198,6 +205,22 @@ class NetworkImageWithFallback extends StatelessWidget {
     );
   }
 
+  Widget _wrapSemantics(Widget child) {
+    if (excludeFromSemantics) {
+      return ExcludeSemantics(child: child);
+    }
+    final label = semanticLabel?.trim();
+    if (label != null && label.isNotEmpty) {
+      return Semantics(
+        image: true,
+        label: label,
+        excludeSemantics: true,
+        child: child,
+      );
+    }
+    return child;
+  }
+
   @override
   Widget build(BuildContext context) {
     final trimmedUrl = _normalizeImageUrl(imageUrl);
@@ -210,7 +233,7 @@ class NetworkImageWithFallback extends StatelessWidget {
           child: fallback,
         );
       }
-      return RepaintBoundary(child: fallback);
+      return RepaintBoundary(child: _wrapSemantics(fallback));
     }
 
     // Only use third-party proxy on Web where browser CORS may restrict direct requests.
@@ -227,6 +250,8 @@ class NetworkImageWithFallback extends StatelessWidget {
         fit: fit,
         cacheWidth: targetCacheWidth,
         filterQuality: FilterQuality.low,
+        semanticLabel: semanticLabel,
+        excludeFromSemantics: excludeFromSemantics,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return _buildPlaceholder(context);
@@ -256,6 +281,6 @@ class NetworkImageWithFallback extends StatelessWidget {
       );
     }
 
-    return RepaintBoundary(child: imageWidget);
+    return RepaintBoundary(child: _wrapSemantics(imageWidget));
   }
 }

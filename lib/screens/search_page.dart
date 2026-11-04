@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../models/article.dart';
@@ -57,6 +58,14 @@ class SearchPageState extends State<SearchPage> {
           _isLoading = false;
           _hasSearched = true;
         });
+        final statusMessage = results.isEmpty
+            ? 'No articles found for $query'
+            : '${results.length} ${results.length == 1 ? 'article' : 'articles'} found';
+        SemanticsService.sendAnnouncement(
+          View.of(context),
+          statusMessage,
+          Directionality.of(context),
+        );
       },
     );
   }
@@ -77,24 +86,30 @@ class SearchPageState extends State<SearchPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: TextField(
-          controller: _searchController,
-          autofocus: true,
-          textInputAction: TextInputAction.search,
-          onChanged: (_) => _onSearchChanged(),
-          decoration: InputDecoration(
-            hintText: 'Search articles...',
-            border: InputBorder.none,
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: _clearSearch,
-                  )
-                : null,
+        title: Semantics(
+          label: 'Search articles',
+          textField: true,
+          child: TextField(
+            controller: _searchController,
+            autofocus: true,
+            textInputAction: TextInputAction.search,
+            onChanged: (_) => _onSearchChanged(),
+            decoration: InputDecoration(
+              hintText: 'Search articles...',
+              border: InputBorder.none,
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      tooltip: 'Clear search',
+                      onPressed: _clearSearch,
+                    )
+                  : null,
+            ),
           ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back',
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),

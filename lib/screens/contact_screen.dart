@@ -26,11 +26,14 @@ class ContactScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Contact',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                  Semantics(
+                    header: true,
+                    child: const Text(
+                      'Contact',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -73,36 +76,53 @@ class ContactScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              contact.title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+            Semantics(
+              header: true,
+              child: Text(
+                contact.title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 8),
             ...contact.emails.map(
-              (singleEmail) => Padding(
-                padding: const EdgeInsets.only(bottom: 4.0),
+              (singleEmail) => Semantics(
+                button: true,
+                link: true,
+                label: 'Email $singleEmail',
+                excludeSemantics: true,
                 child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
                   onTap: () => _launchEmail(context, singleEmail),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.email_outlined,
-                        size: 16,
-                        color: primaryColor,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 40),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8.0,
+                        horizontal: 4.0,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        singleEmail,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: primaryColor,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.email_outlined,
+                            size: 16,
+                            color: primaryColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            singleEmail,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: primaryColor,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

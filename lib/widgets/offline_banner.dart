@@ -20,59 +20,64 @@ class OfflineBanner extends StatelessWidget {
         }
 
         final colorScheme = Theme.of(context).colorScheme;
-        return Material(
-          color: colorScheme.secondaryContainer,
-          elevation: 1,
-          child: SafeArea(
-            top: false,
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.cloud_off_outlined,
-                    size: 18,
-                    color: colorScheme.onSecondaryContainer,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      "You're offline — showing cached articles",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+        return Semantics(
+          liveRegion: true,
+          container: true,
+          child: Material(
+            color: colorScheme.secondaryContainer,
+            elevation: 1,
+            child: SafeArea(
+              top: false,
+              bottom: false,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Row(
+                  children: [
+                    ExcludeSemantics(
+                      child: Icon(
+                        Icons.cloud_off_outlined,
+                        size: 18,
                         color: colorScheme.onSecondaryContainer,
                       ),
                     ),
-                  ),
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      minimumSize: const Size(0, 32),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SavedArticlesScreen(),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "You're offline — showing cached articles",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSecondaryContainer,
                         ),
-                      );
-                    },
-                    child: const Text('Saved'),
-                  ),
-                  if (onRetry != null)
+                      ),
+                    ),
                     TextButton(
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        minimumSize: const Size(0, 32),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        minimumSize: const Size(48, 40),
                       ),
-                      onPressed: onRetry,
-                      child: const Text('Retry'),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SavedArticlesScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('Saved'),
                     ),
-                ],
+                    if (onRetry != null)
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          minimumSize: const Size(48, 40),
+                        ),
+                        onPressed: onRetry,
+                        child: const Text('Retry'),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
