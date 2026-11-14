@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import '../models/article.dart';
 import '../providers/article_provider.dart';
@@ -108,7 +108,10 @@ class _FilteredArticlesScreenState extends State<FilteredArticlesScreen> {
       ),
       body: Column(
         children: [
-          OfflineBanner(onRetry: _loadArticles),
+          OfflineBanner(
+            onRetry: _loadArticles,
+            hasCachedArticles: _articles.isNotEmpty,
+          ),
           if (widget.headerBuilder != null)
             widget.headerBuilder!(context, _isLoading, _articles.length),
           Expanded(

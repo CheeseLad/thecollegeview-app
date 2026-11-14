@@ -1,17 +1,27 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+import '../providers/article_provider.dart';
 import '../services/wp_api_service.dart';
 import '../screens/saved_articles_screen.dart';
 
 class OfflineBanner extends StatelessWidget {
   final VoidCallback? onRetry;
+  final bool? hasCachedArticles;
 
   const OfflineBanner({
     super.key,
     this.onRetry,
+    this.hasCachedArticles,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasCached = hasCachedArticles ??
+        context.select<ArticleProvider, bool>((p) => p.articles.isNotEmpty);
+    if (!hasCached) {
+      return const SizedBox.shrink();
+    }
+
     return ValueListenableBuilder<bool>(
       valueListenable: WpApiService.isOffline,
       builder: (context, isOffline, _) {
@@ -44,7 +54,7 @@ class OfflineBanner extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        "You're offline — showing cached articles",
+                        "You're offline - showing cached articles",
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -65,7 +75,7 @@ class OfflineBanner extends StatelessWidget {
                           ),
                         );
                       },
-                      child: const Text('Saved'),
+                      child: const Text('View Saved'),
                     ),
                     if (onRetry != null)
                       TextButton(

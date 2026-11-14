@@ -365,27 +365,4 @@ class WpApiService {
       return [];
     }
   }
-
-  static Future<String> fetchAboutHtml() async {
-    final config = AppConfig.instance;
-    if (!config.useRemoteAboutPage) {
-      return config.aboutHtml;
-    }
-    try {
-      final response = await get(
-        Uri.parse(
-            '${config.apiBase}/wp-json/wp/v2/pages?slug=${Uri.encodeQueryComponent(config.aboutPageSlug)}'),
-      );
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data is List && data.isNotEmpty && data[0] is Map) {
-          final rendered = data[0]['content']?['rendered']?.toString().trim();
-          if (rendered != null && rendered.isNotEmpty) {
-            return rendered;
-          }
-        }
-      }
-    } catch (_) {}
-    return config.aboutHtml;
-  }
 }

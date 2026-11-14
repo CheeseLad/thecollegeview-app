@@ -46,6 +46,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   flutter_displaymode: ^0.7.0
 
+  material_ui: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

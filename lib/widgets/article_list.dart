@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../config/app_config.dart';
 import '../providers/article_provider.dart';
 import '../models/article.dart';
 import '../screens/article_detail_screen.dart';
+import '../screens/saved_articles_screen.dart';
 import '../services/wp_api_service.dart';
 import '../widgets/network_image_with_fallback.dart';
 import 'skeleton.dart';
@@ -120,10 +121,30 @@ class _ArticleListState extends State<ArticleList> {
                 ),
               ),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-                onPressed: widget.onRetry ?? articleProvider.refreshArticles,
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.bookmark_outline),
+                    label: const Text('View Saved'),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SavedArticlesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    onPressed:
+                        widget.onRetry ?? articleProvider.refreshArticles,
+                  ),
+                ],
               ),
             ],
           ),

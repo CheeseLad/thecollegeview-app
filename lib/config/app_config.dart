@@ -1,13 +1,39 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
+class ContactLink {
+  final String label;
+  final String url;
+
+  const ContactLink({
+    required this.label,
+    required this.url,
+  });
+
+  factory ContactLink.fromJson(Map<String, dynamic> json) {
+    final url = (json['url'] ?? '').toString().trim();
+    final label = (json['label'] ?? json['title'] ?? url).toString().trim();
+    return ContactLink(
+      label: label,
+      url: url,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'label': label,
+        'url': url,
+      };
+}
+
 class ContactEntry {
   final String title;
   final List<String> emails;
+  final List<ContactLink> links;
 
   const ContactEntry({
     required this.title,
     required this.emails,
+    this.links = const [],
   });
 
   factory ContactEntry.fromJson(Map<String, dynamic> json) {
@@ -18,15 +44,25 @@ class ContactEntry {
             .where((e) => e.isNotEmpty)
             .toList()
         : <String>[];
+    final rawLinks = json['links'];
+    final links = rawLinks is List
+        ? rawLinks
+            .whereType<Map<String, dynamic>>()
+            .map(ContactLink.fromJson)
+            .where((l) => l.url.isNotEmpty)
+            .toList()
+        : <ContactLink>[];
     return ContactEntry(
       title: (json['title'] ?? '').toString().trim(),
       emails: emails,
+      links: links,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'title': title,
         'emails': emails,
+        if (links.isNotEmpty) 'links': links.map((l) => l.toJson()).toList(),
       };
 }
 
@@ -39,11 +75,12 @@ class AppConfig {
   static const String defaultContactIntroText =
       'Please email press releases to the appropriate section only.';
   static const String defaultCopyrightNotice =
-      '© The College View 1999-2026 - Maintained by Jake Farrell';
+      '© The College View 1999-2026 - App developed by <a href="https://jakefarrell.ie/?utm_source=tcv_app">Jake Farrell</a>';
   static const String defaultAboutHtml = '''
-<p>The College View is Dublin City University's only student newspaper, independently run voluntarily by students affiliated to DCU's Journalism Society. The newspaper was first published in 1999 after changing its name from The Bullsheet, its predecessor.</p>
-<p>The College View has nine sections – News, Opinions, Features, Irish, Sports, Lifestyle, Satire, Science and Tech and our arts section, The Hype. These sections cover everything from DCU student issues to national student issues, humour and satire to life through the eyes of students, as well as extensive sports coverage and analysis. The Irish section is written and edited by students studying Journalism through Irish in DCU.</p>
-<p>The College View is published fortnightly on Wednesday, with six issues per semester and is circulated among 12,000 students as well as DCU lecturers and staff.</p>
+<p>The College View is an independent student newspaper of Dublin City University, run voluntarily by students affiliated with DCU’s Media Production Society. The newspaper was first published in 1999 after changing its name from The Bullsheet, its predecessor.</p>
+<p>The College View has nine sections – News, Opinions &amp; Features, Irish &amp; Languages, Sports, Lifestyle, Satire, Science and Tech, our sustainability section, The Dev and our arts section, The Hype. These sections cover everything from DCU student issues to national student issues, humour and satire to life through the eyes of students, as well as extensive sports coverage and analysis.</p>
+<p>The College View is published fortnightly, with multiple issues per semester and is circulated among 12,000 students as well as DCU lecturers and staff.</p>
+<p>The College View celebrated ‘6 Hours to Print’ on the 17th February 2026. It involved gathering writers to create news stories for The College View’s first printed paper since 2020. The articles were compiled into a 28-page-long physical newspaper, featuring articles from each of our sections.</p>
 <h3>Community standards and participation guidelines</h3>
 <p>The College View reserves the right to delete comments which it deems abusive. Such comments are deemed to be directly insulting, racist, sexist, xenophobic, or homophobic to other readers or its staff of journalists and writers.</p>
 <p>The College View welcomes criticism and opposing viewpoints through constructive and rational debate and wishes to create an atmosphere which encourages an open dialogue.</p>
@@ -51,7 +88,6 @@ class AppConfig {
 
   // Feature flags
   static const bool defaultEnableAuthorTap = false;
-  static const bool defaultUseRemoteAboutPage = true;
   static const bool defaultEnableRelatedArticles = true;
   static const bool defaultEnableTagChips = true;
   static const bool defaultEnableShareButton = true;
@@ -71,7 +107,6 @@ class AppConfig {
 
   // API & Pagination defaults
   static const String defaultAuthorSubheadingEndpointPath = '/get-subheading';
-  static const String defaultAboutPageSlug = 'about';
   static const int defaultPostsPerPage = 10;
   static const int defaultSearchResultsPerPage = 20;
   static const int defaultRelatedArticlesCount = 3;
@@ -98,6 +133,7 @@ class AppConfig {
 
   // Theme & Reader defaults
   static const String defaultPrimarySeedColorHex = '#1976D2';
+  static const double defaultNavDrawerWidth = 304.0;
   static const double defaultMinFontSize = 13.0;
   static const double defaultReaderFontSize = 16.0;
   static const double defaultMaxFontSize = 24.0;
@@ -146,6 +182,12 @@ class AppConfig {
     ContactEntry(
       title: 'Webmaster: Jake Farrell',
       emails: ['webmaster@dcumps.ie'],
+      links: [
+        ContactLink(
+          label: 'jakefarrell.ie',
+          url: 'https://jakefarrell.ie/?utm_source=tcv_app',
+        ),
+      ],
     ),
   ];
 
@@ -159,7 +201,6 @@ class AppConfig {
 
   // Feature flags
   final bool enableAuthorTap;
-  final bool useRemoteAboutPage;
   final bool enableRelatedArticles;
   final bool enableTagChips;
   final bool enableShareButton;
@@ -181,7 +222,6 @@ class AppConfig {
 
   // API & Pagination
   final String authorSubheadingEndpointPath;
-  final String aboutPageSlug;
   final int postsPerPage;
   final int searchResultsPerPage;
   final int relatedArticlesCount;
@@ -198,6 +238,7 @@ class AppConfig {
 
   // Theme & Reader
   final String primarySeedColorHex;
+  final double navDrawerWidth;
   final double minFontSize;
   final double defaultFontSize;
   final double maxFontSize;
@@ -213,7 +254,6 @@ class AppConfig {
     this.copyrightNotice = defaultCopyrightNotice,
     this.aboutHtml = defaultAboutHtml,
     this.enableAuthorTap = defaultEnableAuthorTap,
-    this.useRemoteAboutPage = defaultUseRemoteAboutPage,
     this.enableRelatedArticles = defaultEnableRelatedArticles,
     this.enableTagChips = defaultEnableTagChips,
     this.enableShareButton = defaultEnableShareButton,
@@ -231,7 +271,6 @@ class AppConfig {
     this.spotifyUrl = '',
     this.imageProxyUrl = defaultImageProxyUrl,
     this.authorSubheadingEndpointPath = defaultAuthorSubheadingEndpointPath,
-    this.aboutPageSlug = defaultAboutPageSlug,
     this.postsPerPage = defaultPostsPerPage,
     this.searchResultsPerPage = defaultSearchResultsPerPage,
     this.relatedArticlesCount = defaultRelatedArticlesCount,
@@ -244,6 +283,7 @@ class AppConfig {
     this.staleCacheTtlDays = defaultStaleCacheTtlDays,
     this.maxCacheEntries = defaultMaxCacheEntries,
     this.primarySeedColorHex = defaultPrimarySeedColorHex,
+    this.navDrawerWidth = defaultNavDrawerWidth,
     this.minFontSize = defaultMinFontSize,
     this.defaultFontSize = defaultReaderFontSize,
     this.maxFontSize = defaultMaxFontSize,
@@ -418,10 +458,6 @@ class AppConfig {
         [json['enableAuthorTap'], features['enableAuthorTap']],
         defaultEnableAuthorTap,
       ),
-      useRemoteAboutPage: _pickBool(
-        [json['useRemoteAboutPage'], features['useRemoteAboutPage']],
-        defaultUseRemoteAboutPage,
-      ),
       enableRelatedArticles: _pickBool(
         [json['enableRelatedArticles'], features['enableRelatedArticles']],
         defaultEnableRelatedArticles,
@@ -481,10 +517,6 @@ class AppConfig {
         defaultImageProxyUrl,
       ),
       authorSubheadingEndpointPath: normalizedEndpointPath,
-      aboutPageSlug: _pickString(
-        [json['aboutPageSlug'], api['aboutPageSlug']],
-        defaultAboutPageSlug,
-      ),
       postsPerPage: _pickInt(
         [json['postsPerPage'], api['postsPerPage']],
         defaultPostsPerPage,
@@ -532,6 +564,16 @@ class AppConfig {
         [json['primarySeedColorHex'], theme['primarySeedColorHex']],
         defaultPrimarySeedColorHex,
       ),
+      navDrawerWidth: _pickDouble(
+        [
+          json['navDrawerWidth'],
+          json['drawerWidth'],
+          theme['navDrawerWidth'],
+          theme['drawerWidth'],
+        ],
+        defaultNavDrawerWidth,
+        min: 180.0,
+      ),
       minFontSize: _pickDouble(
         [json['minFontSize'], reader['minFontSize']],
         defaultMinFontSize,
@@ -563,7 +605,6 @@ class AppConfig {
       'aboutHtml': aboutHtml,
       'features': {
         'enableAuthorTap': enableAuthorTap,
-        'useRemoteAboutPage': useRemoteAboutPage,
         'enableRelatedArticles': enableRelatedArticles,
         'enableTagChips': enableTagChips,
         'enableShareButton': enableShareButton,
@@ -585,7 +626,6 @@ class AppConfig {
       },
       'api': {
         'authorSubheadingEndpointPath': authorSubheadingEndpointPath,
-        'aboutPageSlug': aboutPageSlug,
         'postsPerPage': postsPerPage,
         'searchResultsPerPage': searchResultsPerPage,
         'relatedArticlesCount': relatedArticlesCount,
@@ -603,6 +643,7 @@ class AppConfig {
       'theme': {
         'primarySeedColorHex': primarySeedColorHex,
         'logoAssetPath': logoAssetPath,
+        'navDrawerWidth': navDrawerWidth,
       },
       'reader': {
         'minFontSize': minFontSize,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../screens/articles_screen.dart';
@@ -115,12 +115,16 @@ class CVNavigationDrawer extends StatelessWidget {
     final isContactSelected = activeDestination == _DrawerDestination.contact;
 
     return Drawer(
+      width: config.navDrawerWidth,
       child: Column(
         children: [
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: <Widget>[
+            child: Material(
+              type: MaterialType.transparency,
+              clipBehavior: Clip.hardEdge,
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
                 DrawerHeader(
                   margin: const EdgeInsets.only(bottom: 4),
                   padding:
@@ -254,21 +258,6 @@ class CVNavigationDrawer extends StatelessWidget {
                     _navigateTo(context, const ContactScreen());
                   },
                 ),
-                _buildStyledTile(
-                  context,
-                  title: 'Privacy Policy',
-                  icon: Icons.privacy_tip_outlined,
-                  trailing: Icon(
-                    Icons.open_in_new,
-                    size: 16,
-                    semanticLabel: 'Opens in external browser',
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    DeepLinkHandler.launchExternalUrl(config.privacyPolicyUrl);
-                  },
-                ),
                 Consumer<ThemeProvider>(
                   builder: (context, themeProvider, child) {
                     final (icon, label) = switch (themeProvider.themeMode) {
@@ -292,8 +281,9 @@ class CVNavigationDrawer extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 8),
-              ],
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           ),
 

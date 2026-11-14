@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../config/app_config.dart';
 import '../theme/app_theme.dart';
 import 'network_image_with_fallback.dart';

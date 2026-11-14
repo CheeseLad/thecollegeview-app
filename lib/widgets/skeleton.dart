@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Provides a shared shimmer animation controller and styling to nested skeleton widgets.
 class SkeletonShimmer extends StatefulWidget {
@@ -445,76 +445,6 @@ class ArticleDetailSkeleton extends StatelessWidget {
                     SizedBox(height: 8),
                     SkeletonLine(width: 160, height: 14),
                   ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Skeleton screen for the [AboutScreen].
-class AboutScreenSkeleton extends StatelessWidget {
-  const AboutScreenSkeleton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Loading about page',
-      excludeSemantics: true,
-      child: SkeletonShimmer(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 900),
-            child: Card(
-              margin: const EdgeInsets.all(12),
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: SingleChildScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // About Title
-                      SkeletonBox(
-                        width: 110,
-                        height: 32,
-                        borderRadius: BorderRadius.all(Radius.circular(6)),
-                      ),
-                      SizedBox(height: 20),
-
-                      // Paragraph 1
-                      SkeletonLine(width: double.infinity, height: 14),
-                      SizedBox(height: 8),
-                      SkeletonLine(width: double.infinity, height: 14),
-                      SizedBox(height: 8),
-                      SkeletonLine(width: 260, height: 14),
-                      SizedBox(height: 24),
-
-                      // Paragraph 2
-                      SkeletonLine(width: double.infinity, height: 14),
-                      SizedBox(height: 8),
-                      SkeletonLine(width: double.infinity, height: 14),
-                      SizedBox(height: 8),
-                      SkeletonLine(width: double.infinity, height: 14),
-                      SizedBox(height: 8),
-                      SkeletonLine(width: 190, height: 14),
-                      SizedBox(height: 24),
-
-                      // Paragraph 3
-                      SkeletonLine(width: double.infinity, height: 14),
-                      SizedBox(height: 8),
-                      SkeletonLine(width: double.infinity, height: 14),
-                      SizedBox(height: 8),
-                      SkeletonLine(width: 220, height: 14),
-                    ],
-                  ),
                 ),
               ),
             ),

@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
+import '../utils/deep_link_handler.dart';
 import '../widgets/cv_navigation_drawer.dart';
 
 class ContactScreen extends StatelessWidget {
@@ -117,7 +118,45 @@ class ContactScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               color: primaryColor,
-                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            ...contact.links.map(
+              (link) => Semantics(
+                button: true,
+                link: true,
+                label: '${link.label} (opens in external browser)',
+                excludeSemantics: true,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => DeepLinkHandler.launchExternalUrl(link.url),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 40),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8.0,
+                        horizontal: 4.0,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.language_outlined,
+                            size: 16,
+                            color: primaryColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            link.label,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: primaryColor,
                             ),
                           ),
                         ],

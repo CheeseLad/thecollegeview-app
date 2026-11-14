@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:thecollegeview/widgets/skeleton.dart';
@@ -102,21 +102,6 @@ void main() {
       expect(find.byType(SingleChildScrollView), findsOneWidget);
       expect(find.byType(SkeletonBox), findsWidgets);
       expect(find.byType(SkeletonLine), findsWidgets);
-    });
-
-    testWidgets('AboutScreenSkeleton renders styled about card skeleton',
-        (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: AboutScreenSkeleton(),
-          ),
-        ),
-      );
-
-      expect(find.byType(AboutScreenSkeleton), findsOneWidget);
-      expect(find.byType(Card), findsOneWidget);
-      expect(find.byType(SkeletonBox), findsWidgets);
     });
 
     testWidgets('RelatedArticlesSkeleton renders related section skeleton',
